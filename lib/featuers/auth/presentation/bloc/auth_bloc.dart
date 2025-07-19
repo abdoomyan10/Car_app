@@ -4,7 +4,9 @@ import 'package:car_appp/core/utils/toaster.dart';
 import 'package:car_appp/featuers/auth/domain/usecase/login-user.dart';
 import 'package:car_appp/featuers/auth/presentation/bloc/auth_event.dart';
 import 'package:car_appp/featuers/auth/presentation/bloc/auth_state.dart';
+import 'package:injectable/injectable.dart';
 
+@lazySingleton
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUsecase loginUsecase;
   AuthBloc(this.loginUsecase) : super(AuthState()) {

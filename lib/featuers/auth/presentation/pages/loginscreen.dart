@@ -1,7 +1,14 @@
+import 'package:car_appp/core/services/dependencies.dart';
+import 'package:car_appp/core/utils/requests_status.dart';
+import 'package:car_appp/featuers/auth/domain/usecase/login-user.dart';
+import 'package:car_appp/featuers/auth/presentation/bloc/auth_bloc.dart';
+import 'package:car_appp/featuers/auth/presentation/bloc/auth_event.dart';
+import 'package:car_appp/featuers/auth/presentation/bloc/auth_state.dart';
 import 'package:car_appp/featuers/auth/presentation/pages/signupscreen.dart';
 import 'package:car_appp/featuers/home/presentation/pages/home.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,7 +21,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isLoading = false;
+
   bool _obscurePassword = true;
 
   @override
@@ -24,66 +31,21 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
-      );
-    } on FirebaseAuthException catch (e) {
-      if (!mounted) return;
-      _showErrorDialog(_getErrorMessage(e.code));
-    } catch (e) {
-      if (!mounted) return;
-      _showErrorDialog('حدث خطأ غير متوقع');
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  String _getErrorMessage(String code) {
-    switch (code) {
-      case 'invalid-email':
-        return 'بريد إلكتروني غير صالح';
-      case 'user-disabled':
-        return 'هذا الحساب معطل';
-      case 'user-not-found':
-        return 'لا يوجد حساب مرتبط بهذا البريد الإلكتروني';
-      case 'wrong-password':
-        return 'كلمة المرور غير صحيحة';
-      case 'too-many-requests':
-        return 'عدد كبير جدًا من المحاولات. يرجى المحاولة لاحقًا';
-      default:
-        return 'فشل تسجيل الدخول. يرجى المحاولة مرة أخرى';
-    }
-  }
-
-  Future<void> _showErrorDialog(String message) async {
-    return showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('خطأ'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('حسنًا'),
+  void _login() {
+    if (_formKey.currentState!.validate()) {
+      // تنفيذ عملية تسجيل الدخول هنا
+      getIt<AuthBloc>().add(
+        LoginEvent(
+          params: LoginParams(
+            email: _emailController.text,
+            password: _passwordController.text,
           ),
-        ],
-      ),
-    );
+        ),
+      );
+
+      print('Email: ${_emailController.text}');
+      print('Password: ${_passwordController.text}');
+    }
   }
 
   @override
@@ -170,23 +132,32 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 30),
               // زر تسجيل الدخول
-              ElevatedButton(
-                onPressed: _isLoading ? null : _login,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      )
-                    : const Text(
-                        'تسجيل الدخول',
-                        style: TextStyle(fontSize: 18),
+              BlocConsumer<AuthBloc, AuthState>(
+                bloc: getIt<AuthBloc>(),
+                listener: (context, state) {
+                  if (state.status == RequestStatus.success) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return HomeScreen();
+                        },
                       ),
+                    );
+                  }
+                  // TODO: implement listener
+                },
+                builder: (context, state) {
+                  return ElevatedButton.icon(
+                    icon: state.status == RequestStatus.loading
+                        ? CircularProgressIndicator()
+                        : null,
+                    onPressed: state.status != RequestStatus.loading
+                        ? _login
+                        : null,
+                    label: Text('تسجيل الدخول', style: TextStyle(fontSize: 18)),
+                  );
+                },
               ),
               const SizedBox(height: 20),
               // خط فاصل
