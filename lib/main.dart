@@ -1,3 +1,5 @@
+import 'package:bot_toast/bot_toast.dart';
+import 'package:car_appp/core/services/dependencies.dart';
 import 'package:car_appp/featuers/auth/presentation/pages/splashscreen.dart';
 import 'package:car_appp/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -7,7 +9,7 @@ import 'package:flutter/material.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
+  configureDependencies();
   runApp(const CarMarketApp());
 }
 
@@ -18,6 +20,8 @@ class CarMarketApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Car Market',
+      builder: BotToastInit(),
+      navigatorObservers: [BotToastNavigatorObserver()],
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
