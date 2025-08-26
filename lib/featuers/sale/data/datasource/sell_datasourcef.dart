@@ -46,6 +46,7 @@ class SellCarRemoteDataSource {
         // 'imageUrls': imageUrls,
         'createdAt': FieldValue.serverTimestamp(),
         'status': 'pending', // pending, approved, rejected
+        'type': 'sell', // pending, approved, rejected
       });
     } catch (e) {
       throw Exception('Failed to submit car listing: $e');
