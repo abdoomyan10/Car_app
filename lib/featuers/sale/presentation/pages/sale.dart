@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+
+import '../../../../core/services/dependencies.dart';
+import '../bloc/sell_car_bloc.dart';
 
 class SaleScreen extends StatefulWidget {
   const SaleScreen({super.key});
@@ -14,9 +20,12 @@ class _SaleScreenState extends State<SaleScreen> {
   final TextEditingController _yearController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+
   String _selectedCarType = 'سيدان';
   String _selectedTransmission = 'أوتوماتيك';
-  int _selectedImages = 0;
+  List<XFile> _selectedImages = [];
 
   List<String> carTypes = ['سيدان', 'SUV', 'هايبرد', 'كهربائية', 'كلاسيكية'];
   List<String> transmissions = ['أوتوماتيك', 'مانوال'];
@@ -27,51 +36,62 @@ class _SaleScreenState extends State<SaleScreen> {
     _yearController.dispose();
     _priceController.dispose();
     _phoneController.dispose();
+    _cityController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('بيع سيارتي'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            onPressed: () {
-              // عرض نصائح البيع
-              _showSellingTips();
-            },
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // قسم رفع الصور
-              _buildImageUploadSection(),
-              const SizedBox(height: 20),
+    return BlocListener<SellCarBloc, SellCarState>(
+      bloc: getIt<SellCarBloc>(),
+      listener: (context, state) {
+        if (state is SellCarSuccess) {
+          _showSuccessDialog();
+        } else if (state is SellCarFailure) {
+          _showErrorDialog(state.error);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('بيع سيارتي'),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.help_outline),
+              onPressed: () {
+                _showSellingTips();
+              },
+            ),
+          ],
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // قسم رفع الصور
+                _buildImageUploadSection(),
+                const SizedBox(height: 20),
 
-              // معلومات السيارة الأساسية
-              _buildSectionTitle('معلومات السيارة'),
-              _buildCarInfoForm(),
+                // معلومات السيارة الأساسية
+                _buildSectionTitle('معلومات السيارة'),
+                _buildCarInfoForm(),
 
-              // تفاصيل إضافية
-              _buildSectionTitle('تفاصيل إضافية'),
-              _buildAdditionalDetails(),
+                // تفاصيل إضافية
+                _buildSectionTitle('تفاصيل إضافية'),
+                _buildAdditionalDetails(),
 
-              // معلومات الاتصال
-              _buildSectionTitle('معلومات الاتصال'),
-              _buildContactInfo(),
+                // معلومات الاتصال
+                _buildSectionTitle('معلومات الاتصال'),
+                _buildContactInfo(),
 
-              // زر النشر
-              _buildPublishButton(),
-            ],
+                // زر النشر
+                _buildPublishButton(),
+              ],
+            ),
           ),
         ),
       ),
@@ -107,21 +127,23 @@ class _SaleScreenState extends State<SaleScreen> {
             border: Border.all(color: Colors.grey),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: _selectedImages > 0
+          child: _selectedImages.isNotEmpty
               ? GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
                     mainAxisSpacing: 4,
                     crossAxisSpacing: 4,
                   ),
-                  itemCount: _selectedImages,
+                  itemCount: _selectedImages.length,
                   itemBuilder: (context, index) {
                     return Stack(
                       children: [
                         Container(
                           decoration: BoxDecoration(
                             image: DecorationImage(
-                              image: AssetImage('assets/car${index + 1}.jpg'),
+                              image: FileImage(
+                                File(_selectedImages[index].path),
+                              ),
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -132,7 +154,7 @@ class _SaleScreenState extends State<SaleScreen> {
                           child: GestureDetector(
                             onTap: () {
                               setState(() {
-                                _selectedImages--;
+                                _selectedImages.removeAt(index);
                               });
                             },
                             child: const Icon(Icons.cancel, color: Colors.red),
@@ -158,7 +180,7 @@ class _SaleScreenState extends State<SaleScreen> {
                   ),
                 ),
         ),
-        if (_selectedImages > 0)
+        if (_selectedImages.isNotEmpty && _selectedImages.length < 5)
           TextButton(
             onPressed: _pickImages,
             child: const Text('+ إضافة المزيد من الصور'),
@@ -274,6 +296,7 @@ class _SaleScreenState extends State<SaleScreen> {
         ),
         const SizedBox(height: 15),
         TextFormField(
+          controller: _descriptionController,
           maxLines: 3,
           decoration: const InputDecoration(
             labelText: 'وصف إضافي (اختياري)',
@@ -308,50 +331,109 @@ class _SaleScreenState extends State<SaleScreen> {
         ),
         const SizedBox(height: 15),
         TextFormField(
+          controller: _cityController,
           decoration: const InputDecoration(
             labelText: 'المدينة',
             prefixIcon: Icon(Icons.location_on),
             border: OutlineInputBorder(),
           ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'الرجاء إدخال المدينة';
+            }
+            return null;
+          },
         ),
       ],
     );
   }
 
   Widget _buildPublishButton() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 20.0),
-      child: SizedBox(
-        width: double.infinity,
-        height: 50,
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+    return BlocBuilder<SellCarBloc, SellCarState>(
+      bloc: getIt<SellCarBloc>(),
+      builder: (context, state) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20.0),
+          child: SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: state is SellCarLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        _submitCarForSale();
+                      }
+                    },
+                    child: const Text(
+                      'نشر الإعلان',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
           ),
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              _submitCarForSale();
-            }
-          },
-          child: const Text('نشر الإعلان', style: TextStyle(fontSize: 18)),
-        ),
-      ),
+        );
+      },
     );
   }
 
   Future<void> _pickImages() async {
-    // هنا سيتم تنفيذ اختيار الصور من المعرض
-    // هذا مثال للتوضيح فقط
-    setState(() {
-      _selectedImages = _selectedImages < 5 ? _selectedImages + 1 : 5;
-    });
+    try {
+      final List<XFile> pickedFiles = await ImagePicker().pickMultiImage(
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 80,
+      );
+
+      if (pickedFiles.isNotEmpty) {
+        setState(() {
+          // Limit to 5 images maximum
+          int remainingSlots = 5 - _selectedImages.length;
+          if (remainingSlots > 0) {
+            _selectedImages.addAll(pickedFiles.take(remainingSlots));
+          }
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to pick images: $e')));
+    }
   }
 
   void _submitCarForSale() {
-    // هنا سيتم إرسال البيانات إلى الخادم
+    if (_formKey.currentState!.validate()) {
+      if (_selectedImages.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('الرجاء إضافة صورة واحدة على الأقل')),
+        );
+        return;
+      }
+
+      final sellCarBloc = getIt<SellCarBloc>();
+
+      sellCarBloc.add(
+        SubmitCarListingEvent(
+          carModel: _carModelController.text,
+          year: int.parse(_yearController.text),
+          price: double.parse(_priceController.text),
+          phone: _phoneController.text,
+          carType: _selectedCarType,
+          transmission: _selectedTransmission,
+          description: _descriptionController.text,
+          city: _cityController.text,
+          imageFiles: _selectedImages,
+        ),
+      );
+    }
+  }
+
+  void _showSuccessDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -362,9 +444,24 @@ class _SaleScreenState extends State<SaleScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
+              Navigator.popUntil(context, (route) => route.isFirst);
             },
+            child: const Text('حسناً'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorDialog(String error) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('خطأ'),
+        content: Text('فشل في إرسال الطلب: $error'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
             child: const Text('حسناً'),
           ),
         ],

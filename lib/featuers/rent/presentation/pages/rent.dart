@@ -91,7 +91,6 @@ class _RentScreenState extends State<RentScreen> {
                                 ? 'من تاريخ'
                                 : DateFormat(
                                     'yyyy/MM/dd',
-                                    'ar',
                                   ).format(_selectedDateRange!.start),
                             style: TextStyle(
                               color: _selectedDateRange == null
@@ -126,7 +125,6 @@ class _RentScreenState extends State<RentScreen> {
                                 ? 'إلى تاريخ'
                                 : DateFormat(
                                     'yyyy/MM/dd',
-                                    'ar',
                                   ).format(_selectedDateRange!.end),
                             style: TextStyle(
                               color: _selectedDateRange == null
@@ -373,7 +371,7 @@ class _RentScreenState extends State<RentScreen> {
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
       initialDateRange: _selectedDateRange,
-      locale: const Locale('ar'),
+
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(

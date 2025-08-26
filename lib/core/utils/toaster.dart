@@ -19,7 +19,7 @@ class Toaster {
                 Icon(
                   isError ? Icons.warning_amber_rounded : Icons.done,
                   color: isError ? const Color(0xff9F1C48) : Colors.green,
-                  size: 30.sp,
+                  size: 30,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -50,8 +50,8 @@ class Toaster {
             return Card(
               color: context.scaffoldBackgroundColor,
               child: Container(
-                width: 100.w,
-                padding: EdgeInsets.all(6.sp),
+                width: 100,
+                padding: EdgeInsets.all(6),
                 child: const CustomLoadingWidget(),
               ),
             ).animate().scale();

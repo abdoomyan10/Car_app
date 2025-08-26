@@ -4,7 +4,9 @@ import 'package:car_appp/featuers/auth/data/datasource/auth_datasource.dart';
 import 'package:car_appp/featuers/auth/domain/repos/auth_repository.dart';
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:injectable/injectable.dart';
 
+@Injectable(as: AuthRepo)
 class AuthRepoImpl implements AuthRepo {
   final AuthDatasource datasource;
 
