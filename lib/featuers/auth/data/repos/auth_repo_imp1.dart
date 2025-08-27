@@ -23,4 +23,17 @@ class AuthRepoImpl implements AuthRepo {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, User>> register(String email, String password) async {
+    try {
+      return Right(await datasource.register(email, password));
+    } on ServerException catch (e) {
+      print(e);
+      return Left(ServerFailure(e.message));
+    } on Exception catch (e) {
+      print(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

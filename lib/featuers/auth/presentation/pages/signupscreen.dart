@@ -1,6 +1,6 @@
 import 'package:car_appp/featuers/auth/presentation/pages/loginscreen.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -78,12 +78,7 @@ class _SignUpPageState extends State<SignUpPage> {
       builder: (context) => AlertDialog(
         title: const Text('خطأ'),
         content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('حسنًا'),
-          ),
-        ],
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('حسنًا'))],
       ),
     );
   }
@@ -130,9 +125,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 decoration: InputDecoration(
                   labelText: 'الاسم الكامل',
                   prefixIcon: const Icon(Icons.person),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -150,17 +143,13 @@ class _SignUpPageState extends State<SignUpPage> {
                 decoration: InputDecoration(
                   labelText: 'البريد الإلكتروني',
                   prefixIcon: const Icon(Icons.email),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'الرجاء إدخال البريد الإلكتروني';
                   }
-                  if (!RegExp(
-                    r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                  ).hasMatch(value)) {
+                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
                     return 'بريد إلكتروني غير صالح';
                   }
                   return null;
@@ -175,18 +164,12 @@ class _SignUpPageState extends State<SignUpPage> {
                   labelText: 'كلمة المرور',
                   prefixIcon: const Icon(Icons.lock),
                   suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                    ),
+                    icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
                     onPressed: () {
                       setState(() => _obscurePassword = !_obscurePassword);
                     },
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -207,21 +190,12 @@ class _SignUpPageState extends State<SignUpPage> {
                   labelText: 'تأكيد كلمة المرور',
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureConfirmPassword
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                    ),
+                    icon: Icon(_obscureConfirmPassword ? Icons.visibility : Icons.visibility_off),
                     onPressed: () {
-                      setState(
-                        () =>
-                            _obscureConfirmPassword = !_obscureConfirmPassword,
-                      );
+                      setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
                     },
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -239,15 +213,10 @@ class _SignUpPageState extends State<SignUpPage> {
                 onPressed: _isLoading ? null : _signUp,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 child: _isLoading
-                    ? const CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      )
+                    ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
                     : const Text('إنشاء حساب', style: TextStyle(fontSize: 18)),
               ),
               const SizedBox(height: 20),
@@ -260,9 +229,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     onPressed: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginPage(),
-                        ),
+                        MaterialPageRoute(builder: (context) => const LoginPage()),
                       );
                     },
                     child: const Text('سجل دخولك الآن'),

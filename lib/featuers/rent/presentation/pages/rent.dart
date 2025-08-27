@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 class RentScreen extends StatefulWidget {
@@ -13,10 +12,10 @@ class _RentScreenState extends State<RentScreen> {
   final _formKey = GlobalKey<FormState>();
   DateTimeRange? _selectedDateRange;
   final double _dailyPrice = 150;
-  String _selectedCarType = 'اقتصادية';
-  String _selectedFuelType = 'بنزين';
-  bool _withDriver = false;
-  int _selectedSeats = 4;
+  final String _selectedCarType = 'اقتصادية';
+  final String _selectedFuelType = 'بنزين';
+  final bool _withDriver = false;
+  final int _selectedSeats = 4;
 
   List<String> carTypes = ['اقتصادية', 'عائلية', 'فاخرة', 'رياضية'];
   List<String> fuelTypes = ['بنزين', 'ديزل', 'هايبرد', 'كهرباء'];
@@ -65,10 +64,7 @@ class _RentScreenState extends State<RentScreen> {
               children: [
                 Icon(Icons.calendar_today, size: 20),
                 SizedBox(width: 8),
-                Text(
-                  'حدد فترة التأجير',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
+                Text('حدد فترة التأجير', style: TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 12),
@@ -89,13 +85,9 @@ class _RentScreenState extends State<RentScreen> {
                           Text(
                             _selectedDateRange == null
                                 ? 'من تاريخ'
-                                : DateFormat(
-                                    'yyyy/MM/dd',
-                                  ).format(_selectedDateRange!.start),
+                                : DateFormat('yyyy/MM/dd').format(_selectedDateRange!.start),
                             style: TextStyle(
-                              color: _selectedDateRange == null
-                                  ? Colors.grey
-                                  : Colors.black,
+                              color: _selectedDateRange == null ? Colors.grey : Colors.black,
                             ),
                           ),
                           const Icon(Icons.calendar_month, color: Colors.grey),
@@ -123,13 +115,9 @@ class _RentScreenState extends State<RentScreen> {
                           Text(
                             _selectedDateRange == null
                                 ? 'إلى تاريخ'
-                                : DateFormat(
-                                    'yyyy/MM/dd',
-                                  ).format(_selectedDateRange!.end),
+                                : DateFormat('yyyy/MM/dd').format(_selectedDateRange!.end),
                             style: TextStyle(
-                              color: _selectedDateRange == null
-                                  ? Colors.grey
-                                  : Colors.black,
+                              color: _selectedDateRange == null ? Colors.grey : Colors.black,
                             ),
                           ),
                           const Icon(Icons.calendar_month, color: Colors.grey),
@@ -154,10 +142,7 @@ class _RentScreenState extends State<RentScreen> {
                   const SizedBox(width: 8),
                   Text(
                     ' ر.س',
-                    style: const TextStyle(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -172,10 +157,7 @@ class _RentScreenState extends State<RentScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'السيارات المتاحة',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
+        const Text('السيارات المتاحة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 8),
         ListView.separated(
           physics: const NeverScrollableScrollPhysics(),
@@ -190,36 +172,11 @@ class _RentScreenState extends State<RentScreen> {
 
   Widget _buildCarItem(int index) {
     final cars = [
-      {
-        'model': 'سيرانتو',
-        'price': 100,
-        'type': 'عائلية',
-        'image': 'assets/sorento.png',
-      },
-      {
-        'model': ' mercedes G class',
-        'price': 300,
-        'type': 'فاخرة',
-        'image': 'assets/gcalss.png',
-      },
-      {
-        'model': 'BMW X5 ',
-        'price': 200,
-        'type': 'رياضية',
-        'image': 'assets/bmw.png',
-      },
-      {
-        'model': 'نيسان باترول',
-        'price': 250,
-        'type': 'SUV',
-        'image': 'assets/nissan.png',
-      },
-      {
-        'model': '  verna ',
-        'price': 50,
-        'type': 'اقتصادية',
-        'image': 'assets/verna.png',
-      },
+      {'model': 'سيرانتو', 'price': 100, 'type': 'عائلية', 'image': 'assets/sorento.png'},
+      {'model': ' mercedes G class', 'price': 300, 'type': 'فاخرة', 'image': 'assets/gcalss.png'},
+      {'model': 'BMW X5 ', 'price': 200, 'type': 'رياضية', 'image': 'assets/bmw.png'},
+      {'model': 'نيسان باترول', 'price': 250, 'type': 'SUV', 'image': 'assets/nissan.png'},
+      {'model': '  verna ', 'price': 50, 'type': 'اقتصادية', 'image': 'assets/verna.png'},
     ];
 
     return Card(
@@ -251,10 +208,7 @@ class _RentScreenState extends State<RentScreen> {
                 children: [
                   Text(
                     cars[index]['model'] as String,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -266,21 +220,11 @@ class _RentScreenState extends State<RentScreen> {
                     children: [
                       const Icon(Icons.people, size: 16, color: Colors.grey),
                       const SizedBox(width: 4),
-                      Text(
-                        '${_selectedSeats} مقاعد',
-                        style: const TextStyle(fontSize: 12),
-                      ),
+                      Text('$_selectedSeats مقاعد', style: const TextStyle(fontSize: 12)),
                       const SizedBox(width: 12),
-                      const Icon(
-                        Icons.local_gas_station,
-                        size: 16,
-                        color: Colors.grey,
-                      ),
+                      const Icon(Icons.local_gas_station, size: 16, color: Colors.grey),
                       const SizedBox(width: 4),
-                      Text(
-                        _selectedFuelType,
-                        style: const TextStyle(fontSize: 12),
-                      ),
+                      Text(_selectedFuelType, style: const TextStyle(fontSize: 12)),
                     ],
                   ),
                 ],
@@ -341,10 +285,7 @@ class _RentScreenState extends State<RentScreen> {
                       '${_selectedDateRange!.duration.inDays} أيام',
                       style: const TextStyle(color: Colors.grey),
                     ),
-                  const Text(
-                    'إجمالي الحجز',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                  const Text('إجمالي الحجز', style: TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
@@ -352,10 +293,7 @@ class _RentScreenState extends State<RentScreen> {
               onPressed: _selectedDateRange == null ? null : () {},
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: const Text('تابع الحجز'),
             ),
@@ -413,17 +351,11 @@ class _RentScreenState extends State<RentScreen> {
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ] else
-              const Text(
-                'الرجاء تحديد مدة الاستئجار أولاً',
-                style: TextStyle(color: Colors.red),
-              ),
+              const Text('الرجاء تحديد مدة الاستئجار أولاً', style: TextStyle(color: Colors.red)),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
           ElevatedButton(
             onPressed: _selectedDateRange == null
                 ? null

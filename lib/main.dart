@@ -3,11 +3,15 @@ import 'package:car_appp/core/services/dependencies.dart';
 import 'package:car_appp/featuers/auth/presentation/pages/splashscreen.dart';
 import 'package:car_appp/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
-
 import 'package:flutter/material.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
+import 'package:path_provider/path_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  HydratedBloc.storage = await HydratedStorage.build(
+    storageDirectory: HydratedStorageDirectory((await getApplicationCacheDirectory()).path),
+  );
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   configureDependencies();
   runApp(const CarMarketApp());
@@ -30,11 +34,7 @@ class CarMarketApp extends StatelessWidget {
           elevation: 0,
           backgroundColor: Colors.white,
           iconTheme: IconThemeData(color: Colors.black),
-          titleTextStyle: TextStyle(
-            color: Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          titleTextStyle: TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
         ),
       ),
       home: const SplashScreen(),

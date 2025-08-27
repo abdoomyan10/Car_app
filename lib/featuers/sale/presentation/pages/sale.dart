@@ -1,8 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 
 import '../../../../core/services/dependencies.dart';
 import '../bloc/sell_car_bloc.dart';
@@ -47,7 +48,15 @@ class _SaleScreenState extends State<SaleScreen> {
       bloc: getIt<SellCarBloc>(),
       listener: (context, state) {
         if (state is SellCarSuccess) {
-          _showSuccessDialog();
+          _carModelController.clear();
+          _yearController.clear();
+          _priceController.clear();
+          _phoneController.clear();
+          _cityController.clear();
+          _descriptionController.clear();
+          setState(() {
+            _selectedImages = [];
+          });
         } else if (state is SellCarFailure) {
           _showErrorDialog(state.error);
         }
@@ -103,11 +112,7 @@ class _SaleScreenState extends State<SaleScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Text(
         title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Colors.blue,
-        ),
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue),
       ),
     );
   }
@@ -116,10 +121,7 @@ class _SaleScreenState extends State<SaleScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'صور السيارة (5 كحد أقصى)',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        const Text('صور السيارة (5 كحد أقصى)', style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         Container(
           height: 150,
@@ -141,9 +143,7 @@ class _SaleScreenState extends State<SaleScreen> {
                         Container(
                           decoration: BoxDecoration(
                             image: DecorationImage(
-                              image: FileImage(
-                                File(_selectedImages[index].path),
-                              ),
+                              image: FileImage(File(_selectedImages[index].path)),
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -172,19 +172,13 @@ class _SaleScreenState extends State<SaleScreen> {
                         icon: const Icon(Icons.add_photo_alternate, size: 40),
                         onPressed: _pickImages,
                       ),
-                      const Text(
-                        'إضافة صور',
-                        style: TextStyle(color: Colors.grey),
-                      ),
+                      const Text('إضافة صور', style: TextStyle(color: Colors.grey)),
                     ],
                   ),
                 ),
         ),
         if (_selectedImages.isNotEmpty && _selectedImages.length < 5)
-          TextButton(
-            onPressed: _pickImages,
-            child: const Text('+ إضافة المزيد من الصور'),
-          ),
+          TextButton(onPressed: _pickImages, child: const Text('+ إضافة المزيد من الصور')),
       ],
     );
   }
@@ -362,19 +356,14 @@ class _SaleScreenState extends State<SaleScreen> {
                 : ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
                         _submitCarForSale();
                       }
                     },
-                    child: const Text(
-                      'نشر الإعلان',
-                      style: TextStyle(fontSize: 18),
-                    ),
+                    child: const Text('نشر الإعلان', style: TextStyle(fontSize: 18)),
                   ),
           ),
         );
@@ -409,9 +398,9 @@ class _SaleScreenState extends State<SaleScreen> {
   void _submitCarForSale() {
     if (_formKey.currentState!.validate()) {
       if (_selectedImages.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('الرجاء إضافة صورة واحدة على الأقل')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('الرجاء إضافة صورة واحدة على الأقل')));
         return;
       }
 
@@ -438,9 +427,7 @@ class _SaleScreenState extends State<SaleScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('تم بنجاح'),
-        content: const Text(
-          'تم إرسال طلب بيع سيارتك بنجاح، سنتواصل معك قريباً.',
-        ),
+        content: const Text('تم إرسال طلب بيع سيارتك بنجاح، سنتواصل معك قريباً.'),
         actions: [
           TextButton(
             onPressed: () {
@@ -459,12 +446,7 @@ class _SaleScreenState extends State<SaleScreen> {
       builder: (context) => AlertDialog(
         title: const Text('خطأ'),
         content: Text('فشل في إرسال الطلب: $error'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('حسناً'),
-          ),
-        ],
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('حسناً'))],
       ),
     );
   }
@@ -489,12 +471,7 @@ class _SaleScreenState extends State<SaleScreen> {
             ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('شكراً'),
-          ),
-        ],
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('شكراً'))],
       ),
     );
   }

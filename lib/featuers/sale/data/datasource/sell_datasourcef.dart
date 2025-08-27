@@ -1,22 +1,24 @@
 // data/datasources/sell_car_remote_data_source.dart
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:http/http.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
 
 @injectable
 class SellCarRemoteDataSource {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   Future<String> uploadImage(XFile imageFile, String carId) async {
     try {
-      // final ref = _storage.ref().child(
-      //   'car_images/$carId/${DateTime.now().millisecondsSinceEpoch}',
-      // );
-      // await ref.putData(await imageFile.readAsBytes());
-      // return await ref.getDownloadURL();
-      return '';
+      final image = base64Encode(await imageFile.readAsBytes());
+      final response = await post(
+        Uri.parse('https://api.imgbb.com/1/upload'),
+        body: {'key': '8597717602852ffc6b20f68e54d3fec0', 'image': image, 'name': imageFile.name},
+      );
+      print(jsonDecode(response.body)['data']['url']);
+      return jsonDecode(response.body)['data']['url'];
     } catch (e) {
       throw Exception('Failed to upload image: $e');
     }
@@ -34,6 +36,7 @@ class SellCarRemoteDataSource {
     required List<String> imageUrls,
   }) async {
     try {
+      print(imageUrls);
       await _firestore.collection('car_listings').add({
         'carModel': carModel,
         'year': year,
@@ -43,7 +46,7 @@ class SellCarRemoteDataSource {
         'transmission': transmission,
         'description': description,
         'city': city,
-        // 'imageUrls': imageUrls,
+        'imageUrls': imageUrls,
         'createdAt': FieldValue.serverTimestamp(),
         'status': 'pending', // pending, approved, rejected
         'type': 'sell', // pending, approved, rejected

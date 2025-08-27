@@ -11,15 +11,12 @@ class SellCarRepositoryImpl implements SellCarRepository {
   SellCarRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<List<String>> uploadImages(
-    List<XFile> imageFiles,
-    String carId,
-  ) async {
+  Future<List<String>> uploadImages(List<XFile> imageFiles, String carId) async {
     List<String> imageUrls = [];
-    for (var imageFile in imageFiles) {
-      final url = await remoteDataSource.uploadImage(imageFile, carId);
-      imageUrls.add(url);
-    }
+    final result = await Future.wait(
+      imageFiles.map((e) async => await remoteDataSource.uploadImage(e, carId)),
+    );
+    imageUrls.addAll(result);
     return imageUrls;
   }
 
@@ -35,6 +32,7 @@ class SellCarRepositoryImpl implements SellCarRepository {
     required String city,
     required List<String> imageUrls,
   }) async {
+    print(imageUrls);
     return await remoteDataSource.submitCarListing(
       carModel: carModel,
       year: year,
