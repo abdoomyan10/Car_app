@@ -6,6 +6,7 @@ import '../../../../core/error/failure.dart';
 import '../model/car_model.dart';
 
 abstract class CarListingsRemoteDataSource {
+  Future<void> updateCar(String id, Map<String, dynamic> map);
   Future<List<CarListing>> getCarListings();
   Future<List<CarListing>> getCarListingsByFilters({
     String? status,
@@ -50,19 +51,22 @@ class CarListingsRemoteDataSourceImpl implements CarListingsRemoteDataSource {
       if (carType != null) {
         query = query.where('carType', isEqualTo: carType);
       }
-
+      query = query.limit(10);
       final querySnapshot = await query.get();
-
-      print(
-        querySnapshot.docs.map((doc) {
-          return (doc.data() as Map<String, dynamic>)['imageUrls'];
-        }),
-      );
       return querySnapshot.docs.map((doc) {
         return CarListing.fromMap(doc.id, doc.data() as Map<String, dynamic>);
       }).toList();
     } catch (e) {
       throw ServerFailure('Failed to fetch car listings: $e');
+    }
+  }
+
+  @override
+  Future<void> updateCar(String id, Map<String, dynamic> map) async {
+    try {
+      await firestore.collection('car_listings').doc(id).update(map);
+    } on FirebaseException {
+      rethrow;
     }
   }
 }

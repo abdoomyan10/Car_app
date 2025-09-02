@@ -8,13 +8,13 @@ import '../../data/model/car_model.dart';
 import '../repo/car_repo.dart';
 
 @injectable
-class GetCarListings implements UseCase<List<CarListing>, NoParams> {
+class GetSellCarListings implements UseCase<List<CarListing>, NoParams> {
   final CarListingsRepository repository;
 
-  GetCarListings(this.repository);
+  GetSellCarListings(this.repository);
 
   @override
   Future<Either<Failure, List<CarListing>>> call(NoParams params) async {
-    return await repository.getCarListingsByFilters(status: 'pending', type: 'sell');
+    return await repository.getCarListingsByFilters(status: 'accepted', type: 'sell');
   }
 }

@@ -21,7 +21,7 @@ import '../../featuers/auth/presentation/bloc/auth_bloc.dart' as _i204;
 import '../../featuers/buy/data/datasource/car_datasource.dart' as _i507;
 import '../../featuers/buy/data/repo/car_repo_impl.dart' as _i875;
 import '../../featuers/buy/domain/repo/car_repo.dart' as _i261;
-import '../../featuers/buy/domain/usecase/get_cars_usecase.dart' as _i285;
+import '../../featuers/buy/domain/usecase/get_sell_cars_usecase.dart' as _i285;
 import '../../featuers/favorite/presentation/bloc/favorite_bloc.dart' as _i869;
 import '../../featuers/home/presentation/bloc/home_bloc.dart' as _i765;
 import '../../featuers/sale/data/datasource/sell_datasourcef.dart' as _i264;
@@ -67,8 +67,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i83.SubmitCarListing>(
       () => _i83.SubmitCarListing(repository: gh<_i477.SellCarRepository>()),
     );
-    gh.factory<_i285.GetCarListings>(
-      () => _i285.GetCarListings(gh<_i261.CarListingsRepository>()),
+    gh.factory<_i285.GetSellCarListings>(
+      () => _i285.GetSellCarListings(gh<_i261.CarListingsRepository>()),
     );
     gh.lazySingleton<_i204.AuthBloc>(
       () => _i204.AuthBloc(
@@ -77,7 +77,7 @@ extension GetItInjectableX on _i174.GetIt {
       ),
     );
     gh.lazySingleton<_i765.HomeBloc>(
-      () => _i765.HomeBloc(gh<_i285.GetCarListings>()),
+      () => _i765.HomeBloc(gh<_i285.GetSellCarListings>()),
     );
     gh.lazySingleton<_i410.SellCarBloc>(
       () => _i410.SellCarBloc(submitCarListing: gh<_i83.SubmitCarListing>()),

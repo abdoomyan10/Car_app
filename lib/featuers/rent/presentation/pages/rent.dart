@@ -1,5 +1,13 @@
+import 'package:car_appp/core/utils/requests_status.dart';
+import 'package:car_appp/core/utils/toaster.dart';
+import 'package:car_appp/featuers/buy/data/model/car_model.dart';
+import 'package:car_appp/featuers/rent/domain/use_cases/rent_car_usecase.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+
+import '../../../../core/services/dependencies.dart';
+import '../bloc/rent_car_bloc.dart';
 
 class RentScreen extends StatefulWidget {
   const RentScreen({super.key});
@@ -11,6 +19,7 @@ class RentScreen extends StatefulWidget {
 class _RentScreenState extends State<RentScreen> {
   final _formKey = GlobalKey<FormState>();
   DateTimeRange? _selectedDateRange;
+  CarListing? _car;
   final double _dailyPrice = 150;
   final String _selectedCarType = 'اقتصادية';
   final String _selectedFuelType = 'بنزين';
@@ -48,7 +57,6 @@ class _RentScreenState extends State<RentScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomSummary(),
     );
   }
 
@@ -159,26 +167,38 @@ class _RentScreenState extends State<RentScreen> {
       children: [
         const Text('السيارات المتاحة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 8),
-        ListView.separated(
-          physics: const NeverScrollableScrollPhysics(),
-          shrinkWrap: true,
-          itemCount: 5,
-          separatorBuilder: (context, index) => const SizedBox(height: 12),
-          itemBuilder: (context, index) => _buildCarItem(index),
+        BlocBuilder<RentCarBloc, RentCarState>(
+          bloc: getIt<RentCarBloc>(),
+          builder: (context, state) {
+            return state.rentCarStatus == RequestStatus.loading
+                ? Expanded(child: Center(child: CircularProgressIndicator.adaptive()))
+                : state.rentCarStatus == RequestStatus.success
+                ? state.cars.isEmpty
+                      ? Expanded(child: Center(child: Text('لا يوجد سيارات متاحة للآجار حالياً')))
+                      : ListView.separated(
+                          physics: const NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          itemCount: state.cars.length,
+                          separatorBuilder: (context, index) => const SizedBox(height: 12),
+                          itemBuilder: (context, index) => _buildCarItem(state.cars[index]),
+                        )
+                : Expanded(
+                    child: Center(
+                      child: IconButton.filled(
+                        onPressed: () {
+                          getIt<RentCarBloc>().add(GetRentCarEvent());
+                        },
+                        icon: Icon(Icons.refresh_rounded),
+                      ),
+                    ),
+                  );
+          },
         ),
       ],
     );
   }
 
-  Widget _buildCarItem(int index) {
-    final cars = [
-      {'model': 'سيرانتو', 'price': 100, 'type': 'عائلية', 'image': 'assets/sorento.png'},
-      {'model': ' mercedes G class', 'price': 300, 'type': 'فاخرة', 'image': 'assets/gcalss.png'},
-      {'model': 'BMW X5 ', 'price': 200, 'type': 'رياضية', 'image': 'assets/bmw.png'},
-      {'model': 'نيسان باترول', 'price': 250, 'type': 'SUV', 'image': 'assets/nissan.png'},
-      {'model': '  verna ', 'price': 50, 'type': 'اقتصادية', 'image': 'assets/verna.png'},
-    ];
-
+  Widget _buildCarItem(CarListing car) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -188,8 +208,8 @@ class _RentScreenState extends State<RentScreen> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                cars[index]['image'] as String,
+              child: Image.network(
+                car.imageUrls.first,
                 width: 100,
                 height: 80,
                 fit: BoxFit.cover,
@@ -207,14 +227,11 @@ class _RentScreenState extends State<RentScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    cars[index]['model'] as String,
+                    car.carModel,
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    cars[index]['type'] as String,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                  ),
+                  Text(car.carType, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
                   const SizedBox(height: 4),
                   Row(
                     children: [
@@ -233,7 +250,7 @@ class _RentScreenState extends State<RentScreen> {
             Column(
               children: [
                 Text(
-                  '${cars[index]['price']} دولار/يوم',
+                  '${car.price} دولار/يوم',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.blue,
@@ -242,7 +259,7 @@ class _RentScreenState extends State<RentScreen> {
                 ),
                 const SizedBox(height: 8),
                 ElevatedButton(
-                  onPressed: () => _showBookingDialog(cars[index]),
+                  onPressed: () => _showBookingDialog(car),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     backgroundColor: Colors.green[50],
@@ -251,51 +268,6 @@ class _RentScreenState extends State<RentScreen> {
                   child: const Text('حجز'),
                 ),
               ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomSummary() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (_selectedDateRange != null)
-                    Text(
-                      '${_selectedDateRange!.duration.inDays} أيام',
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                  const Text('إجمالي الحجز', style: TextStyle(fontWeight: FontWeight.bold)),
-                ],
-              ),
-            ),
-            ElevatedButton(
-              onPressed: _selectedDateRange == null ? null : () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              child: const Text('تابع الحجز'),
             ),
           ],
         ),
@@ -332,11 +304,11 @@ class _RentScreenState extends State<RentScreen> {
     }
   }
 
-  void _showBookingDialog(Map<String, dynamic> car) {
+  void _showBookingDialog(CarListing car) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('حجز ${car['model']}'),
+        title: Text('حجز ${car.carModel}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,10 +316,10 @@ class _RentScreenState extends State<RentScreen> {
             if (_selectedDateRange != null) ...[
               Text('المدة: ${_selectedDateRange!.duration.inDays} أيام'),
               const SizedBox(height: 8),
-              Text('السعر اليومي: ${car['price']} ر.س'),
+              Text('السعر اليومي: ${car.price} ر.س'),
               const SizedBox(height: 8),
               Text(
-                'الإجمالي: ${car['price'] * _selectedDateRange!.duration.inDays} ر.س',
+                'الإجمالي: ${car.price * _selectedDateRange!.duration.inDays} ر.س',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ] else
@@ -361,7 +333,7 @@ class _RentScreenState extends State<RentScreen> {
                 ? null
                 : () {
                     Navigator.pop(context);
-                    _showPaymentOptions();
+                    _showPaymentOptions(car);
                   },
             child: const Text('تأكيد الحجز'),
           ),
@@ -370,7 +342,7 @@ class _RentScreenState extends State<RentScreen> {
     );
   }
 
-  void _showPaymentOptions() {
+  void _showPaymentOptions(CarListing car) {
     showModalBottomSheet(
       context: context,
       builder: (context) => Padding(
@@ -383,18 +355,47 @@ class _RentScreenState extends State<RentScreen> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            _buildPaymentOption(Icons.credit_card, 'بطاقة ائتمان'),
+            IgnorePointer(
+              ignoring: true,
+              child: _buildPaymentOption(Icons.credit_card, 'بطاقة ائتمان'),
+            ),
             _buildPaymentOption(Icons.money, 'الدفع عند الاستلام'),
-            _buildPaymentOption(Icons.phone_android, 'محفظة إلكترونية'),
+            IgnorePointer(
+              ignoring: true,
+              child: _buildPaymentOption(Icons.phone_android, 'محفظة إلكترونية'),
+            ),
             const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _showBookingConfirmation();
-                },
-                child: const Text('تابع الدفع'),
+            BlocListener<RentCarBloc, RentCarState>(
+              bloc: getIt<RentCarBloc>(),
+              listener: (context, state) {
+                if (state.rentNewCarStatus == RequestStatus.loading) {
+                  Toaster.showLoading();
+                } else {
+                  Toaster.closeLoading();
+                  if (state.rentNewCarStatus == RequestStatus.failed) {
+                    Toaster.showToast('حدث خطأ، أعد المحاولة');
+                  } else {
+                    Navigator.pop(context);
+                    _showBookingConfirmation();
+                  }
+                }
+              },
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    getIt<RentCarBloc>().add(
+                      RentNewCarEvent(
+                        params: RentCarParams(
+                          id: car.id,
+                          status: 'rented',
+                          period: _selectedDateRange!.duration.inDays.toString(),
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text('تابع الدفع'),
+                ),
               ),
             ),
           ],

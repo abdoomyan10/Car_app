@@ -6,6 +6,7 @@ import '../../../../core/error/failure.dart';
 
 abstract class CarListingsRepository {
   Future<Either<Failure, List<CarListing>>> getCarListings();
+  Future<Either<Failure, void>> updateCar(String id, Map<String, dynamic> map);
   Future<Either<Failure, List<CarListing>>> getCarListingsByFilters({
     String? status,
     String? type,
