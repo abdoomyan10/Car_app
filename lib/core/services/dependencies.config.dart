@@ -102,6 +102,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i410.SellCarBloc>(
       () => _i410.SellCarBloc(submitCarListing: gh<_i83.SubmitCarListing>()),
     );
+    gh.lazySingleton<_i312.RentCarBloc>(
+      () => _i312.RentCarBloc(gh<_i1050.GetRentCarsUsecase>()),
+    );
     return this;
   }
 }
