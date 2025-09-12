@@ -41,14 +41,16 @@ class _BuyScreenState extends State<BuyScreen> {
                   },
                   child: GridView.builder(
                     padding: const EdgeInsets.all(16),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 0.8,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 0.8,
+                        ),
                     itemCount: state.cars.length,
-                    itemBuilder: (context, index) => _buildCarCard(state.cars[index]),
+                    itemBuilder: (context, index) =>
+                        _buildCarCard(state.cars[index]),
                   ),
                 );
         },
@@ -60,7 +62,86 @@ class _BuyScreenState extends State<BuyScreen> {
     final priceFormat = NumberFormat('#,###', 'ar');
 
     return GestureDetector(
-      onTap: () => _showSimpleCarDetails(car),
+      onTap: () => showGeneralDialog(
+        context: context,
+        useRootNavigator: true,
+        pageBuilder: (context, animation, secondaryAnimation) => Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    car.imageUrls.first,
+                    height: 200,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: Colors.grey[200],
+                      height: 200,
+                      child: const Icon(Icons.car_repair, size: 50),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  car.carModel,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${NumberFormat('#,###', 'ar').format(car.price)} ر.س',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    color: Colors.blue,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                BlocListener<BuyBloc, BuyState>(
+                  bloc: getIt<BuyBloc>(),
+                  listener: (_, state) {
+                    if (state.requestBuyStatus == RequestStatus.loading) {
+                      // simple feedback; you can wire Toaster if needed
+                    } else if (state.requestBuyStatus ==
+                        RequestStatus.success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('تم إرسال طلب الشراء بنجاح'),
+                        ),
+                      );
+                    } else if (state.requestBuyStatus == RequestStatus.failed) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('تعذر إرسال الطلب، حاول لاحقاً'),
+                        ),
+                      );
+                    }
+                  },
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        getIt<BuyBloc>().add(RequestBuyCarEvent(id: car.id));
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: Colors.blue,
+                      ),
+                      child: const Text('حجز طلب'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
       child: Card(
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -69,7 +150,9 @@ class _BuyScreenState extends State<BuyScreen> {
           children: [
             // صورة السيارة
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
               child: Stack(
                 children: [
                   Image.network(
@@ -92,7 +175,9 @@ class _BuyScreenState extends State<BuyScreen> {
                         final isFavorite = state.cars.contains(car);
                         return IconButton(
                           onPressed: () {
-                            getIt<FavoriteBloc>().add(ToggleFavoriteEvent(carListing: car));
+                            getIt<FavoriteBloc>().add(
+                              ToggleFavoriteEvent(carListing: car),
+                            );
                           },
                           icon: Icon(
                             isFavorite ? Icons.favorite : Icons.favorite_border,
@@ -114,7 +199,10 @@ class _BuyScreenState extends State<BuyScreen> {
                 children: [
                   Text(
                     car.carModel,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -124,69 +212,28 @@ class _BuyScreenState extends State<BuyScreen> {
                     children: [
                       Text(
                         '${priceFormat.format(car.price)} دولار',
-                        style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.grey[100],
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: Text(car.city, style: const TextStyle(fontSize: 12)),
+                        child: Text(
+                          car.city,
+                          style: const TextStyle(fontSize: 12),
+                        ),
                       ),
                     ],
                   ),
                 ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showSimpleCarDetails(CarListing car) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                car.imageUrls.first,
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: Colors.grey[200],
-                  height: 200,
-                  child: const Icon(Icons.car_repair, size: 50),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(car.carModel, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text(
-              '${NumberFormat('#,###', 'ar').format(car.price)} ر.س',
-              style: const TextStyle(fontSize: 18, color: Colors.blue, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Container(child: Text('thank'));
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Colors.blue,
-                ),
-                child: const Text('تواصل مع البائع'),
               ),
             ),
           ],

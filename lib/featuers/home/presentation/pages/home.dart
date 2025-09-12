@@ -1,4 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:car_appp/core/utils/toaster.dart';
 import 'package:car_appp/featuers/buy/data/model/car_model.dart';
 import 'package:car_appp/featuers/buy/presentation/pages/buy.dart';
 import 'package:car_appp/featuers/favorite/presentation/pages/favorite_screen.dart';
@@ -7,9 +8,11 @@ import 'package:car_appp/featuers/rent/presentation/pages/rent.dart';
 import 'package:car_appp/featuers/sale/presentation/pages/sale.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/services/dependencies.dart';
 import '../../../../core/utils/requests_status.dart';
+import '../../../buy/presentation/bloc/buy_bloc.dart';
 import '../../../favorite/presentation/bloc/favorite_bloc.dart';
 import '../bloc/home_bloc.dart';
 
@@ -416,13 +419,119 @@ class RecentListingsSection extends StatelessWidget {
                   physics: const AlwaysScrollableScrollPhysics(),
                   itemBuilder: (context, index) {
                     final car = state.cars[index];
-                    return ListingItem(
-                      image: car.imageUrls.firstOrNull ?? '',
-                      title: car.carModel,
-                      price: '${car.price.toStringAsFixed(0)} ل.س',
-                      location: car.city,
-                      date:
-                          '${car.createdAt.day}/${car.createdAt.month}/${car.createdAt.year}',
+                    return GestureDetector(
+                      onTap: () {
+                        showGeneralDialog(
+                          context: context,
+                          useRootNavigator: true,
+                          pageBuilder: (context, animation, secondaryAnimation) => Dialog(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      car.imageUrls.first,
+                                      height: 200,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(
+                                        color: Colors.grey[200],
+                                        height: 200,
+                                        child: const Icon(
+                                          Icons.car_repair,
+                                          size: 50,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    car.carModel,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '${NumberFormat('#,###', 'ar').format(car.price)} ر.س',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.blue,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  BlocListener<BuyBloc, BuyState>(
+                                    bloc: getIt<BuyBloc>(),
+                                    listener: (_, state) {
+                                      if (state.requestBuyStatus ==
+                                          RequestStatus.loading) {
+                                        // simple feedback; you can wire Toaster if needed
+                                        Toaster.showLoading();
+                                      } else if (state.requestBuyStatus ==
+                                          RequestStatus.success) {
+                                        Navigator.pop(context);
+                                        Toaster.closeLoading();
+                                        getIt<HomeBloc>().add(GetCarsEvent());
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'تم إرسال طلب الشراء بنجاح',
+                                            ),
+                                          ),
+                                        );
+                                      } else if (state.requestBuyStatus ==
+                                          RequestStatus.failed) {
+                                        Toaster.closeLoading();
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'تعذر إرسال الطلب، حاول لاحقاً',
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          getIt<BuyBloc>().add(
+                                            RequestBuyCarEvent(id: car.id),
+                                          );
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 16,
+                                          ),
+                                          backgroundColor: Colors.blue,
+                                        ),
+                                        child: const Text('حجز طلب'),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                      child: ListingItem(
+                        image: car.imageUrls.firstOrNull ?? '',
+                        title: car.carModel,
+                        price: '${car.price.toStringAsFixed(0)} ل.س',
+                        location: car.city,
+                        date:
+                            '${car.createdAt.day}/${car.createdAt.month}/${car.createdAt.year}',
+                      ),
                     );
                   },
                 ),

@@ -2,7 +2,6 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:car_appp/core/extensions/context_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class Toaster {
   Toaster._();
@@ -51,7 +50,8 @@ class Toaster {
               color: context.scaffoldBackgroundColor,
               child: Container(
                 width: 100,
-                padding: EdgeInsets.all(6),
+                height: 100,
+                padding: EdgeInsets.all(12),
                 child: const CustomLoadingWidget(),
               ),
             ).animate().scale();
