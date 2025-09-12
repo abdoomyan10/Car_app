@@ -1,5 +1,12 @@
+import 'package:car_appp/featuers/buy/data/model/car_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+
+import '../../../../core/services/dependencies.dart';
+import '../../../../core/utils/requests_status.dart';
+import '../../../favorite/presentation/bloc/favorite_bloc.dart';
+import '../bloc/buy_bloc.dart';
 
 class BuyScreen extends StatefulWidget {
   const BuyScreen({super.key});
@@ -9,56 +16,47 @@ class BuyScreen extends StatefulWidget {
 }
 
 class _BuyScreenState extends State<BuyScreen> {
-  final List<Map<String, dynamic>> cars = [
-    {
-      'image': 'assets/santafe.png.png',
-      'model': '  سنتافيه 2014',
-      'price': 12000,
-      'location': 'حلب',
-      'isFavorite': false,
-    },
-    {
-      'image': 'assets/sportage.png',
-      'model': '  سبورتاج 2010',
-      'price': 8000,
-      'location': 'الشام',
-      'isFavorite': true,
-    },
-    {
-      'image': 'assets/Rio.png',
-      'model': '  كيا ريو 2008',
-      'price': 5000,
-      'location': 'حلب',
-      'isFavorite': false,
-    },
-    {
-      'image': 'assets/lxs.png.png',
-      'model': 'لكزس LX570 2020',
-      'price': 25000,
-      'location': 'سرمدا',
-      'isFavorite': false,
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('السيارات المتاحة'), centerTitle: true),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 0.8,
-        ),
-        itemCount: cars.length,
-        itemBuilder: (context, index) => _buildCarCard(cars[index]),
+      body: BlocBuilder<BuyBloc, BuyState>(
+        bloc: getIt<BuyBloc>()..add(GetBuyCarEvent()),
+        builder: (context, state) {
+          return state.carBuyStatus == RequestStatus.loading
+              ? const Center(child: CircularProgressIndicator())
+              : state.carBuyStatus == RequestStatus.failed
+              ? Center(
+                  child: IconButton.filled(
+                    onPressed: () {
+                      getIt<BuyBloc>().add(GetBuyCarEvent());
+                    },
+                    icon: Icon(Icons.refresh),
+                  ),
+                )
+              : RefreshIndicator.adaptive(
+                  onRefresh: () {
+                    getIt<BuyBloc>().add(GetBuyCarEvent());
+                    return Future.delayed(const Duration(seconds: 1), () {});
+                  },
+                  child: GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 0.8,
+                    ),
+                    itemCount: state.cars.length,
+                    itemBuilder: (context, index) => _buildCarCard(state.cars[index]),
+                  ),
+                );
+        },
       ),
     );
   }
 
-  Widget _buildCarCard(Map<String, dynamic> car) {
+  Widget _buildCarCard(CarListing car) {
     final priceFormat = NumberFormat('#,###', 'ar');
 
     return GestureDetector(
@@ -71,13 +69,11 @@ class _BuyScreenState extends State<BuyScreen> {
           children: [
             // صورة السيارة
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
               child: Stack(
                 children: [
-                  Image.asset(
-                    car['image'],
+                  Image.network(
+                    car.imageUrls.first,
                     height: 120,
                     width: double.infinity,
                     fit: BoxFit.cover,
@@ -90,14 +86,20 @@ class _BuyScreenState extends State<BuyScreen> {
                   Positioned(
                     top: 8,
                     left: 8,
-                    child: IconButton(
-                      icon: Icon(
-                        car['isFavorite']
-                            ? Icons.favorite
-                            : Icons.favorite_border,
-                        color: car['isFavorite'] ? Colors.red : Colors.white,
-                      ),
-                      onPressed: () => _toggleFavorite(car),
+                    child: BlocBuilder<FavoriteBloc, FavoriteState>(
+                      bloc: getIt<FavoriteBloc>(),
+                      builder: (context, state) {
+                        final isFavorite = state.cars.contains(car);
+                        return IconButton(
+                          onPressed: () {
+                            getIt<FavoriteBloc>().add(ToggleFavoriteEvent(carListing: car));
+                          },
+                          icon: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorite ? Colors.red : Colors.white,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -111,11 +113,8 @@ class _BuyScreenState extends State<BuyScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    car['model'],
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                    car.carModel,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -124,25 +123,16 @@ class _BuyScreenState extends State<BuyScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '${priceFormat.format(car['price'])} ر.س',
-                        style: const TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        '${priceFormat.format(car.price)} دولار',
+                        style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.grey[100],
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: Text(
-                          car['location'],
-                          style: const TextStyle(fontSize: 12),
-                        ),
+                        child: Text(car.city, style: const TextStyle(fontSize: 12)),
                       ),
                     ],
                   ),
@@ -155,13 +145,7 @@ class _BuyScreenState extends State<BuyScreen> {
     );
   }
 
-  void _toggleFavorite(Map<String, dynamic> car) {
-    setState(() {
-      car['isFavorite'] = !car['isFavorite'];
-    });
-  }
-
-  void _showSimpleCarDetails(Map<String, dynamic> car) {
+  void _showSimpleCarDetails(CarListing car) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -172,8 +156,8 @@ class _BuyScreenState extends State<BuyScreen> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                car['image'],
+              child: Image.network(
+                car.imageUrls.first,
                 height: 200,
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -185,18 +169,11 @@ class _BuyScreenState extends State<BuyScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            Text(
-              car['model'],
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            Text(car.carModel, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text(
-              '${NumberFormat('#,###', 'ar').format(car['price'])} ر.س',
-              style: const TextStyle(
-                fontSize: 18,
-                color: Colors.blue,
-                fontWeight: FontWeight.bold,
-              ),
+              '${NumberFormat('#,###', 'ar').format(car.price)} ر.س',
+              style: const TextStyle(fontSize: 18, color: Colors.blue, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             SizedBox(

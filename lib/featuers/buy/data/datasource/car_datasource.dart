@@ -51,12 +51,12 @@ class CarListingsRemoteDataSourceImpl implements CarListingsRemoteDataSource {
       if (carType != null) {
         query = query.where('carType', isEqualTo: carType);
       }
-      query = query.limit(10);
       final querySnapshot = await query.get();
       return querySnapshot.docs.map((doc) {
         return CarListing.fromMap(doc.id, doc.data() as Map<String, dynamic>);
       }).toList();
     } catch (e) {
+      print(e);
       throw ServerFailure('Failed to fetch car listings: $e');
     }
   }

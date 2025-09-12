@@ -14,7 +14,7 @@ class SellCarRepositoryImpl implements SellCarRepository {
   Future<List<String>> uploadImages(List<XFile> imageFiles, String carId) async {
     List<String> imageUrls = [];
     final result = await Future.wait(
-      imageFiles.map((e) async => await remoteDataSource.uploadImage(e, carId)),
+      imageFiles.map((e) async => await remoteDataSource.uploadImage(e)),
     );
     imageUrls.addAll(result);
     return imageUrls;

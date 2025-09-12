@@ -112,7 +112,7 @@ class FavoriteCarItem extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.red),
               onPressed: () {
-                context.read<FavoriteBloc>().add(ToggleFavoriteEvent(carListing: favorite));
+                getIt<FavoriteBloc>().add(ToggleFavoriteEvent(carListing: favorite));
               },
             ),
           ],

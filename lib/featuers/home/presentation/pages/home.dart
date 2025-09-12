@@ -1,14 +1,15 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'package:car_appp/core/utils/requests_status.dart';
 import 'package:car_appp/featuers/buy/data/model/car_model.dart';
 import 'package:car_appp/featuers/buy/presentation/pages/buy.dart';
 import 'package:car_appp/featuers/favorite/presentation/pages/favorite_screen.dart';
+import 'package:car_appp/featuers/home/presentation/pages/drawer.dart';
 import 'package:car_appp/featuers/rent/presentation/pages/rent.dart';
 import 'package:car_appp/featuers/sale/presentation/pages/sale.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/services/dependencies.dart';
+import '../../../../core/utils/requests_status.dart';
 import '../../../favorite/presentation/bloc/favorite_bloc.dart';
 import '../bloc/home_bloc.dart';
 
@@ -19,9 +20,9 @@ class MainNavigationScreen extends StatefulWidget {
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
 }
 
-class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  int _currentIndex = 0;
+int currentIndex = 0;
 
+class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final List<Widget> _pages = [
     const HomeScreen(),
     const BuyScreen(),
@@ -32,7 +33,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _pages),
+      body: IndexedStack(index: currentIndex, children: _pages),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
@@ -40,10 +41,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           ],
         ),
         child: BottomNavigationBar(
-          currentIndex: _currentIndex,
+          currentIndex: currentIndex,
           onTap: (index) {
             setState(() {
-              _currentIndex = index;
+              currentIndex = index;
             });
           },
           type: BottomNavigationBarType.fixed,
@@ -96,6 +97,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: AppDrawer(),
+
       appBar: AppBar(
         title: const Text('Car Market'),
         actions: [IconButton(icon: const Icon(Icons.notifications_none), onPressed: () {})],
@@ -105,9 +108,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class HomeScreenBody extends StatelessWidget {
+class HomeScreenBody extends StatefulWidget {
   const HomeScreenBody({super.key});
 
+  @override
+  State<HomeScreenBody> createState() => _HomeScreenBodyState();
+}
+
+class _HomeScreenBodyState extends State<HomeScreenBody> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -171,7 +179,7 @@ class SectionTitle extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        TextButton(onPressed: onTap ?? () {}, child: const Text('عرض الكل')),
+        TextButton(onPressed: onTap, child: onTap == null ? Text('') : const Text('عرض الكل')),
       ],
     );
   }
@@ -182,33 +190,22 @@ class FeaturedCarsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 220,
-      child: BlocBuilder<HomeBloc, HomeState>(
-        bloc: getIt<HomeBloc>(),
-        builder: (context, state) {
-          print(state.cars.length);
-          print(state.carBuyStatus);
-          return state.carBuyStatus == RequestStatus.failed
-              ? Center(
-                  child: IconButton.filled(
-                    onPressed: () {
-                      getIt<HomeBloc>().add(GetCarsEvent());
-                    },
-                    icon: Icon(Icons.refresh),
-                  ),
-                )
-              : state.carBuyStatus == RequestStatus.success
-              ? ListView.separated(
+    return BlocBuilder<FavoriteBloc, FavoriteState>(
+      bloc: getIt<FavoriteBloc>(),
+      builder: (context, state) {
+        return state.cars.isEmpty
+            ? Center(child: Text('لا يوجد سيارات مفضلة بعد'))
+            : SizedBox(
+                height: 220,
+                child: ListView.separated(
                   separatorBuilder: (context, index) => SizedBox(width: 10),
-                  itemCount: state.cars.length,
+                  itemCount: state.cars.length > 3 ? 3 : state.cars.length,
                   scrollDirection: Axis.horizontal,
 
                   itemBuilder: (context, index) => CarCard(car: state.cars[index]),
-                )
-              : Center(child: CircularProgressIndicator.adaptive());
-        },
-      ),
+                ),
+              );
+      },
     );
   }
 }
@@ -357,24 +354,30 @@ class RecentListingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
-      children: [
-        ListingItem(
-          image: 'assets/mercedes.png',
-          title: 'مرسيدس E200 2020',
-          price: ' 20000',
-          location: 'حلب',
-          date: 'منذ ساعتين',
-        ),
-        SizedBox(height: 10),
-        ListingItem(
-          image: 'assets/lxs.png.png',
-          title: 'لكزس LX570 2021',
-          price: '25000',
-          location: 'الشام',
-          date: 'منذ 5 ساعات',
-        ),
-      ],
+    return BlocBuilder<HomeBloc, HomeState>(
+      bloc: getIt<HomeBloc>(),
+      builder: (context, state) {
+        return state.carBuyStatus == RequestStatus.loading
+            ? const Center(child: CircularProgressIndicator())
+            : state.cars.isEmpty
+            ? const Center(child: Text('لا توجد إعلانات حديثة'))
+            : ListView.separated(
+                separatorBuilder: (context, index) => const SizedBox(height: 10),
+                itemCount: state.cars.length,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemBuilder: (context, index) {
+                  final car = state.cars[index];
+                  return ListingItem(
+                    image: car.imageUrls.firstOrNull ?? '',
+                    title: car.carModel,
+                    price: '${car.price.toStringAsFixed(0)} ل.س',
+                    location: car.city,
+                    date: '${car.createdAt.day}/${car.createdAt.month}/${car.createdAt.year}',
+                  );
+                },
+              );
+      },
     );
   }
 }
@@ -415,7 +418,7 @@ class ListingItem extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
+            child: Image.network(
               image,
               width: 100,
               height: 80,

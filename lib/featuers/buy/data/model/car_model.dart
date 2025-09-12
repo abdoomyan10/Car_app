@@ -65,7 +65,7 @@ class CarListing extends Equatable {
       description: map['description'] ?? '',
       city: map['city'] ?? '',
       imageUrls: List<String>.from(map['imageUrls'] ?? []),
-      createdAt: (map['createdAt'] as Timestamp).toDate(),
+      createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       status: map['status'] ?? 'pending',
       type: map['type'] ?? 'sell',
     );

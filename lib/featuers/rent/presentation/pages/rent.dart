@@ -38,23 +38,20 @@ class _RentScreenState extends State<RentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('استئجار سيارة'), centerTitle: true),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // محدد التاريخ والوقت
-              _buildDateRangePicker(),
-              const SizedBox(height: 20),
+      body: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // محدد التاريخ والوقت
+            Expanded(flex: 1, child: _buildDateRangePicker()),
+            const SizedBox(height: 20),
 
-              // فلترة سريعة
+            // فلترة سريعة
 
-              // قائمة السيارات المتاحة
-              _buildAvailableCarsList(),
-            ],
-          ),
+            // قائمة السيارات المتاحة
+            Expanded(flex: 4, child: _buildAvailableCarsList()),
+          ],
         ),
       ),
     );
@@ -175,12 +172,17 @@ class _RentScreenState extends State<RentScreen> {
                 : state.rentCarStatus == RequestStatus.success
                 ? state.cars.isEmpty
                       ? Expanded(child: Center(child: Text('لا يوجد سيارات متاحة للآجار حالياً')))
-                      : ListView.separated(
-                          physics: const NeverScrollableScrollPhysics(),
-                          shrinkWrap: true,
-                          itemCount: state.cars.length,
-                          separatorBuilder: (context, index) => const SizedBox(height: 12),
-                          itemBuilder: (context, index) => _buildCarItem(state.cars[index]),
+                      : RefreshIndicator.adaptive(
+                          onRefresh: () => Future(() {
+                            getIt<RentCarBloc>().add(GetRentCarEvent());
+                          }),
+                          child: ListView.separated(
+                            physics: const NeverScrollableScrollPhysics(),
+                            shrinkWrap: true,
+                            itemCount: state.cars.length,
+                            separatorBuilder: (context, index) => const SizedBox(height: 12),
+                            itemBuilder: (context, index) => _buildCarItem(state.cars[index]),
+                          ),
                         )
                 : Expanded(
                     child: Center(
@@ -209,7 +211,7 @@ class _RentScreenState extends State<RentScreen> {
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.network(
-                car.imageUrls.first,
+                car.imageUrls.isEmpty ? '' : car.imageUrls.first,
                 width: 100,
                 height: 80,
                 fit: BoxFit.cover,
@@ -388,7 +390,7 @@ class _RentScreenState extends State<RentScreen> {
                       RentNewCarEvent(
                         params: RentCarParams(
                           id: car.id,
-                          status: 'rented',
+                          status: 'rent_pending',
                           period: _selectedDateRange!.duration.inDays.toString(),
                         ),
                       ),

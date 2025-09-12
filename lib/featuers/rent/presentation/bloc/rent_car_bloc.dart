@@ -14,7 +14,21 @@ part 'rent_car_state.dart';
 @lazySingleton
 class RentCarBloc extends Bloc<RentCarEvent, RentCarState> {
   final GetRentCarsUsecase getRentCarsUsecase;
-  RentCarBloc(this.getRentCarsUsecase) : super(RentCarState()) {
+  final RentCarUsecase rentCarUsecase;
+  RentCarBloc(this.getRentCarsUsecase, this.rentCarUsecase) : super(RentCarState()) {
+    on<RentNewCarEvent>((event, emit) async {
+      emit(state.copyWith(rentNewCarStatus: RequestStatus.loading));
+      final result = await rentCarUsecase.call(event.params);
+      result.fold(
+        (left) {
+          emit(state.copyWith(rentNewCarStatus: RequestStatus.failed));
+        },
+        (right) {
+          emit(state.copyWith(rentNewCarStatus: RequestStatus.success));
+        },
+      );
+      add(GetRentCarEvent());
+    });
     on<GetRentCarEvent>((event, emit) async {
       emit(state.copyWith(rentCarStatus: RequestStatus.loading));
       final result = await getRentCarsUsecase.call(NoParams());

@@ -10,7 +10,7 @@ import 'package:injectable/injectable.dart';
 class SellCarRemoteDataSource {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<String> uploadImage(XFile imageFile, String carId) async {
+  Future<String> uploadImage(XFile imageFile) async {
     try {
       final image = base64Encode(await imageFile.readAsBytes());
       final response = await post(
@@ -36,7 +36,6 @@ class SellCarRemoteDataSource {
     required List<String> imageUrls,
   }) async {
     try {
-      print(imageUrls);
       await _firestore.collection('car_listings').add({
         'carModel': carModel,
         'year': year,
