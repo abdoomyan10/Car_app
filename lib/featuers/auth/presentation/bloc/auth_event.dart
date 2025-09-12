@@ -20,3 +20,5 @@ class RegisterEvent extends AuthEvent {
 
   const RegisterEvent({required this.params});
 }
+
+class LogoutEvent extends AuthEvent {}

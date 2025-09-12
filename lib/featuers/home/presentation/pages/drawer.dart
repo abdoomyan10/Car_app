@@ -1,3 +1,7 @@
+import 'package:car_appp/core/services/dependencies.dart';
+import 'package:car_appp/featuers/auth/presentation/bloc/auth_bloc.dart';
+import 'package:car_appp/featuers/auth/presentation/bloc/auth_event.dart';
+import 'package:car_appp/featuers/auth/presentation/pages/splashscreen.dart';
 import 'package:flutter/material.dart';
 
 import '../../../favorite/presentation/pages/favorite_screen.dart';
@@ -13,8 +17,12 @@ class AppDrawer extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             UserAccountsDrawerHeader(
-              accountName: Text('اسم المستخدم'), // Replace with actual user name if available
-              accountEmail: Text('user@email.com'), // Replace with actual email if available
+              accountName: Text(
+                'اسم المستخدم',
+              ), // Replace with actual user name if available
+              accountEmail: Text(
+                'user@email.com',
+              ), // Replace with actual email if available
               currentAccountPicture: CircleAvatar(
                 backgroundColor: Colors.blue,
                 child: Text(
@@ -35,7 +43,10 @@ class AppDrawer extends StatelessWidget {
               leading: Icon(Icons.favorite),
               title: Text('المفضلة'),
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => FavoritesScreen()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => FavoritesScreen()),
+                );
               },
             ),
             ListTile(
@@ -58,9 +69,11 @@ class AppDrawer extends StatelessWidget {
                 icon: Icon(Icons.logout),
                 label: Text('تسجيل الخروج'),
                 onPressed: () {
-                  // TODO: Add logout logic here
-                  Navigator.of(context).popUntil((route) => route.isFirst);
-                  // Optionally navigate to login screen
+                  getIt<AuthBloc>().add(LogoutEvent());
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const SplashScreen()),
+                    (route) => false,
+                  );
                 },
               ),
             ),
