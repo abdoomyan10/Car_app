@@ -20,7 +20,7 @@ class _RentScreenState extends State<RentScreen> {
   final _formKey = GlobalKey<FormState>();
   DateTimeRange? _selectedDateRange;
   final double _dailyPrice = 150;
-  String? _selectedCarType; // null = كل الأنواع
+  String? _selectedCarType;
   final String _selectedFuelType = 'بنزين';
   final int _selectedSeats = 4;
 
@@ -28,213 +28,288 @@ class _RentScreenState extends State<RentScreen> {
   List<String> fuelTypes = ['بنزين', 'ديزل', 'هايبرد', 'كهرباء'];
 
   @override
+  void initState() {
+    super.initState();
+    getIt<RentCarBloc>().add(GetRentCarEvent());
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('استئجار سيارة'), centerTitle: true),
-      body: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // محدد التاريخ والوقت
-            Expanded(flex: 1, child: _buildDateRangePicker()),
-            const SizedBox(height: 20),
-            _buildSelectedRangeSummary(),
-            const SizedBox(height: 12),
-            _buildQuickFilters(),
-            const SizedBox(height: 12),
-
-            // قائمة السيارات المتاحة
-            Expanded(flex: 4, child: _buildAvailableCarsList()),
-          ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildDateRangePicker(),
+                const SizedBox(height: 20),
+                _buildSelectedRangeSummary(),
+                const SizedBox(height: 12),
+                _buildQuickFilters(),
+                const SizedBox(height: 12),
+                _buildAvailableCarsList(),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildDateRangePicker() {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            const Row(
-              children: [
-                Icon(Icons.calendar_today, size: 20),
-                SizedBox(width: 8),
-                Text(
-                  'حدد فترة التأجير',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _selectDateRange(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            _selectedDateRange == null
-                                ? 'من تاريخ'
-                                : DateFormat(
-                                    'yyyy/MM/dd',
-                                  ).format(_selectedDateRange!.start),
-                            style: TextStyle(
-                              color: _selectedDateRange == null
-                                  ? Colors.grey
-                                  : Colors.black,
-                            ),
-                          ),
-                          const Icon(Icons.calendar_month, color: Colors.grey),
-                        ],
-                      ),
-                    ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.calendar_today, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'حدد فترة التأجير',
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Icon(Icons.arrow_forward, color: Colors.grey),
-                ),
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _selectDateRange(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            _selectedDateRange == null
-                                ? 'إلى تاريخ'
-                                : DateFormat(
-                                    'yyyy/MM/dd',
-                                  ).format(_selectedDateRange!.end),
-                            style: TextStyle(
-                              color: _selectedDateRange == null
-                                  ? Colors.grey
-                                  : Colors.black,
-                            ),
-                          ),
-                          const Icon(Icons.calendar_month, color: Colors.grey),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (_selectedDateRange != null) ...[
+                ],
+              ),
               const SizedBox(height: 12),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.access_time, size: 16, color: Colors.grey),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${_selectedDateRange!.duration.inDays} أيام',
-                    style: const TextStyle(color: Colors.grey),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _selectDateRange(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _selectedDateRange == null
+                                  ? 'من تاريخ'
+                                  : DateFormat(
+                                      'yyyy/MM/dd',
+                                    ).format(_selectedDateRange!.start),
+                              style: TextStyle(
+                                color: _selectedDateRange == null
+                                    ? Colors.grey
+                                    : Colors.black,
+                              ),
+                            ),
+                            const Icon(
+                              Icons.calendar_month,
+                              color: Colors.grey,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    ' ر.س',
-                    style: const TextStyle(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.bold,
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    child: Icon(Icons.arrow_forward, color: Colors.grey),
+                  ),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _selectDateRange(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _selectedDateRange == null
+                                  ? 'إلى تاريخ'
+                                  : DateFormat(
+                                      'yyyy/MM/dd',
+                                    ).format(_selectedDateRange!.end),
+                              style: TextStyle(
+                                color: _selectedDateRange == null
+                                    ? Colors.grey
+                                    : Colors.black,
+                              ),
+                            ),
+                            const Icon(
+                              Icons.calendar_month,
+                              color: Colors.grey,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
+              if (_selectedDateRange != null) ...[
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${_selectedDateRange!.duration.inDays} أيام',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'ر.س',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selectDateRange(BuildContext context) async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDateRange: _selectedDateRange,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Colors.blue,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(foregroundColor: Colors.blue),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && mounted) {
+      setState(() => _selectedDateRange = picked);
+    }
+  }
+
+  Widget _buildSelectedRangeSummary() {
+    if (_selectedDateRange == null) return const SizedBox.shrink();
+
+    final days = _selectedDateRange!.duration.inDays;
+    final total = NumberFormat('#,###').format(days * _dailyPrice);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.blue.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.blue.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.info_outline, color: Colors.blue),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'المدة: $days يوم - تقدير التكلفة: $total دولار',
+                style: const TextStyle(fontSize: 13),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
+  Widget _buildQuickFilters() {
+    return SizedBox(
+      height: 36,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (context, index) {
+          final all = index == 0;
+          final label = all ? 'الكل' : carTypes[index - 1];
+          final selected = all
+              ? _selectedCarType == null
+              : _selectedCarType == label;
+
+          return ChoiceChip(
+            label: Text(label),
+            selected: selected,
+            onSelected: (_) {
+              setState(() {
+                _selectedCarType = all ? null : label;
+              });
+            },
+          );
+        },
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemCount: 1 + carTypes.length,
+      ),
+    );
+  }
+
   Widget _buildAvailableCarsList() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'السيارات المتاحة',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        const SizedBox(height: 8),
-        BlocBuilder<RentCarBloc, RentCarState>(
-          bloc: getIt<RentCarBloc>(),
-          builder: (context, state) {
-            return state.rentCarStatus == RequestStatus.loading
-                ? Expanded(
-                    child: Center(child: CircularProgressIndicator.adaptive()),
-                  )
-                : state.rentCarStatus == RequestStatus.success
-                ? state.cars.isEmpty
-                      ? Expanded(
-                          child: Center(
-                            child: Text('لا يوجد سيارات متاحة للآجار حالياً'),
-                          ),
-                        )
-                      : RefreshIndicator.adaptive(
-                          onRefresh: () => Future(() {
-                            getIt<RentCarBloc>().add(GetRentCarEvent());
-                          }),
-                          child: ListView.separated(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            shrinkWrap: true,
-                            itemCount:
-                                (_selectedCarType == null
-                                        ? state.cars
-                                        : state.cars
-                                              .where(
-                                                (c) =>
-                                                    c.carType ==
-                                                    _selectedCarType,
-                                              )
-                                              .toList())
-                                    .length,
-                            separatorBuilder: (context, index) =>
-                                const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              final filtered = _selectedCarType == null
-                                  ? state.cars
-                                  : state.cars
-                                        .where(
-                                          (c) => c.carType == _selectedCarType,
-                                        )
-                                        .toList();
-                              return _buildCarItem(filtered[index]);
-                            },
-                          ),
-                        )
-                : Expanded(
-                    child: Center(
-                      child: IconButton.filled(
-                        onPressed: () {
-                          getIt<RentCarBloc>().add(GetRentCarEvent());
-                        },
-                        icon: Icon(Icons.refresh_rounded),
-                      ),
-                    ),
-                  );
-          },
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: BlocBuilder<RentCarBloc, RentCarState>(
+        bloc: getIt<RentCarBloc>(),
+        builder: (context, state) {
+          if (state.rentCarStatus == RequestStatus.loading) {
+            return const Center(child: CircularProgressIndicator.adaptive());
+          } else if (state.rentCarStatus == RequestStatus.failed) {
+            return Center(
+              child: IconButton.filled(
+                onPressed: () {
+                  getIt<RentCarBloc>().add(GetRentCarEvent());
+                },
+                icon: const Icon(Icons.refresh_rounded),
+              ),
+            );
+          }
+
+          final cars = _selectedCarType == null
+              ? state.cars
+              : state.cars.where((c) => c.carType == _selectedCarType).toList();
+
+          if (cars.isEmpty) {
+            return const Center(
+              child: Text('لا يوجد سيارات متاحة للآجار حالياً'),
+            );
+          }
+
+          return ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: cars.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) => _buildCarItem(cars[index]),
+          );
+        },
+      ),
     );
   }
 
@@ -248,19 +323,14 @@ class _RentScreenState extends State<RentScreen> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: AspectRatio(
-                aspectRatio: 4 / 3,
-                child: Image.network(
-                  car.imageUrls.isEmpty ? '' : car.imageUrls.first,
-                  width: 120,
-                  height: 90,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    color: Colors.grey[200],
-                    child: const Center(
-                      child: Icon(Icons.car_rental, size: 40),
-                    ),
-                  ),
+              child: Image.network(
+                car.imageUrls.isEmpty ? '' : car.imageUrls.first,
+                width: 120,
+                height: 90,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: Colors.grey[200],
+                  child: const Center(child: Icon(Icons.car_rental, size: 40)),
                 ),
               ),
             ),
@@ -269,38 +339,14 @@ class _RentScreenState extends State<RentScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          car.carModel,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          car.carType,
-                          style: const TextStyle(
-                            color: Colors.blue,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    car.carModel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Row(
@@ -342,7 +388,6 @@ class _RentScreenState extends State<RentScreen> {
                 ],
               ),
             ),
-            const SizedBox(width: 8),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -369,94 +414,6 @@ class _RentScreenState extends State<RentScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Future<void> _selectDateRange(BuildContext context) async {
-    final DateTimeRange? picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      initialDateRange: _selectedDateRange,
-
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Colors.blue,
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(foregroundColor: Colors.blue),
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null && mounted) {
-      setState(() => _selectedDateRange = picked);
-    }
-  }
-
-  Widget _buildSelectedRangeSummary() {
-    if (_selectedDateRange == null) {
-      return const SizedBox.shrink();
-    }
-    final days = _selectedDateRange!.duration.inDays;
-    final total = NumberFormat('#,###').format(days * _dailyPrice);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.blue.withOpacity(0.2)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.info_outline, color: Colors.blue),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'المدة: $days يوم - تقدير التكلفة: $total دولار',
-                style: const TextStyle(fontSize: 13),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickFilters() {
-    return SizedBox(
-      height: 36,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        scrollDirection: Axis.horizontal,
-        itemBuilder: (context, index) {
-          final all = index == 0;
-          final label = all ? 'الكل' : carTypes[index - 1];
-          final selected = all
-              ? _selectedCarType == null
-              : _selectedCarType == label;
-          return ChoiceChip(
-            label: Text(label),
-            selected: selected,
-            onSelected: (_) {
-              setState(() {
-                _selectedCarType = all ? null : label;
-              });
-            },
-          );
-        },
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemCount: 1 + carTypes.length,
       ),
     );
   }
@@ -576,9 +533,7 @@ class _RentScreenState extends State<RentScreen> {
       leading: Icon(icon, color: Colors.blue),
       title: Text(title),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-      onTap: () {
-        // اختيار طريقة الدفع
-      },
+      onTap: () {},
     );
   }
 
