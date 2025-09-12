@@ -21,9 +21,13 @@ import '../../featuers/auth/presentation/bloc/auth_bloc.dart' as _i204;
 import '../../featuers/buy/data/datasource/car_datasource.dart' as _i507;
 import '../../featuers/buy/data/repo/car_repo_impl.dart' as _i875;
 import '../../featuers/buy/domain/repo/car_repo.dart' as _i261;
-import '../../featuers/buy/domain/usecase/get_sell_cars_usecase.dart' as _i285;
+import '../../featuers/buy/domain/usecase/get_sell_cars_usecase.dart' as _i188;
 import '../../featuers/favorite/presentation/bloc/favorite_bloc.dart' as _i869;
 import '../../featuers/home/presentation/bloc/home_bloc.dart' as _i765;
+import '../../featuers/rent/domain/use_cases/get_rent_cars_usecase.dart'
+    as _i1050;
+import '../../featuers/rent/domain/use_cases/rent_car_usecase.dart' as _i685;
+import '../../featuers/rent/presentation/bloc/rent_car_bloc.dart' as _i312;
 import '../../featuers/sale/data/datasource/sell_datasourcef.dart' as _i264;
 import '../../featuers/sale/data/repo/sell_repo_impl.dart' as _i400;
 import '../../featuers/sale/domain/repo/sell_repo.dart' as _i477;
@@ -67,8 +71,17 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i83.SubmitCarListing>(
       () => _i83.SubmitCarListing(repository: gh<_i477.SellCarRepository>()),
     );
-    gh.factory<_i285.GetSellCarListings>(
-      () => _i285.GetSellCarListings(gh<_i261.CarListingsRepository>()),
+    gh.factory<_i188.GetSellCarListings>(
+      () => _i188.GetSellCarListings(gh<_i261.CarListingsRepository>()),
+    );
+    gh.factory<_i1050.GetRentCarsUsecase>(
+      () => _i1050.GetRentCarsUsecase(repo: gh<_i261.CarListingsRepository>()),
+    );
+    gh.factory<_i685.RentCarUsecase>(
+      () => _i685.RentCarUsecase(repo: gh<_i261.CarListingsRepository>()),
+    );
+    gh.lazySingleton<_i765.HomeBloc>(
+      () => _i765.HomeBloc(gh<_i188.GetSellCarListings>()),
     );
     gh.lazySingleton<_i204.AuthBloc>(
       () => _i204.AuthBloc(
@@ -76,11 +89,11 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i171.RegisterUsecase>(),
       ),
     );
-    gh.lazySingleton<_i765.HomeBloc>(
-      () => _i765.HomeBloc(gh<_i285.GetSellCarListings>()),
-    );
     gh.lazySingleton<_i410.SellCarBloc>(
       () => _i410.SellCarBloc(submitCarListing: gh<_i83.SubmitCarListing>()),
+    );
+    gh.lazySingleton<_i312.RentCarBloc>(
+      () => _i312.RentCarBloc(gh<_i1050.GetRentCarsUsecase>()),
     );
     return this;
   }
