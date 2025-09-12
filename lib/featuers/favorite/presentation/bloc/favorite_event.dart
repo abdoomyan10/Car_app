@@ -12,3 +12,5 @@ class ToggleFavoriteEvent extends FavoriteEvent {
 
   const ToggleFavoriteEvent({required this.carListing});
 }
+
+class ClearFavoriteEvent extends FavoriteEvent {}

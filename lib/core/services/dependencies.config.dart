@@ -16,7 +16,7 @@ import '../../featuers/auth/data/datasource/auth_datasource.dart' as _i64;
 import '../../featuers/auth/data/repos/auth_repo_imp1.dart' as _i469;
 import '../../featuers/auth/domain/repos/auth_repository.dart' as _i875;
 import '../../featuers/auth/domain/usecase/login-user.dart' as _i1048;
-import '../../featuers/auth/domain/usecase/logout_user.dart' as _i200;
+import '../../featuers/auth/domain/usecase/logout_user.dart' as _i109;
 import '../../featuers/auth/domain/usecase/register_user.dart' as _i171;
 import '../../featuers/auth/presentation/bloc/auth_bloc.dart' as _i204;
 import '../../featuers/buy/data/datasource/car_datasource.dart' as _i507;
@@ -65,8 +65,15 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i171.RegisterUsecase>(
       () => _i171.RegisterUsecase(repo: gh<_i875.AuthRepo>()),
     );
-    gh.factory<_i200.LogoutUser>(
-      () => _i200.LogoutUser(repo: gh<_i875.AuthRepo>()),
+    gh.factory<_i109.LogoutUser>(
+      () => _i109.LogoutUser(repo: gh<_i875.AuthRepo>()),
+    );
+    gh.lazySingleton<_i204.AuthBloc>(
+      () => _i204.AuthBloc(
+        gh<_i1048.LoginUsecase>(),
+        gh<_i171.RegisterUsecase>(),
+        gh<_i109.LogoutUser>(),
+      ),
     );
     gh.factory<_i261.CarListingsRepository>(
       () => _i875.CarListingsRepositoryImpl(
@@ -94,24 +101,11 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i685.RentCarUsecase>(),
       ),
     );
-    gh.lazySingleton<_i204.AuthBloc>(
-      () => _i204.AuthBloc(
-        gh<_i1048.LoginUsecase>(),
-        gh<_i171.RegisterUsecase>(),
-        gh<_i200.LogoutUser>(),
-      ),
-    );
     gh.lazySingleton<_i163.BuyBloc>(
       () => _i163.BuyBloc(gh<_i188.GetSellCarListings>()),
     );
     gh.lazySingleton<_i410.SellCarBloc>(
       () => _i410.SellCarBloc(submitCarListing: gh<_i83.SubmitCarListing>()),
-    );
-    gh.lazySingleton<_i312.RentCarBloc>(
-      () => _i312.RentCarBloc(
-        gh<_i1050.GetRentCarsUsecase>(),
-        gh<_i685.RentCarUsecase>(),
-      ),
     );
     return this;
   }

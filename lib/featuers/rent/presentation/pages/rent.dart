@@ -19,20 +19,13 @@ class RentScreen extends StatefulWidget {
 class _RentScreenState extends State<RentScreen> {
   final _formKey = GlobalKey<FormState>();
   DateTimeRange? _selectedDateRange;
-  CarListing? _car;
   final double _dailyPrice = 150;
-  final String _selectedCarType = 'اقتصادية';
+  String? _selectedCarType; // null = كل الأنواع
   final String _selectedFuelType = 'بنزين';
-  final bool _withDriver = false;
   final int _selectedSeats = 4;
 
   List<String> carTypes = ['اقتصادية', 'عائلية', 'فاخرة', 'رياضية'];
   List<String> fuelTypes = ['بنزين', 'ديزل', 'هايبرد', 'كهرباء'];
-  String _calculateTotalPrice() {
-    if (_selectedDateRange == null) return '0';
-    final days = _selectedDateRange!.duration.inDays;
-    return NumberFormat('#,###').format(days * _dailyPrice);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +39,10 @@ class _RentScreenState extends State<RentScreen> {
             // محدد التاريخ والوقت
             Expanded(flex: 1, child: _buildDateRangePicker()),
             const SizedBox(height: 20),
-
-            // فلترة سريعة
+            _buildSelectedRangeSummary(),
+            const SizedBox(height: 12),
+            _buildQuickFilters(),
+            const SizedBox(height: 12),
 
             // قائمة السيارات المتاحة
             Expanded(flex: 4, child: _buildAvailableCarsList()),
@@ -69,7 +64,10 @@ class _RentScreenState extends State<RentScreen> {
               children: [
                 Icon(Icons.calendar_today, size: 20),
                 SizedBox(width: 8),
-                Text('حدد فترة التأجير', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  'حدد فترة التأجير',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -90,9 +88,13 @@ class _RentScreenState extends State<RentScreen> {
                           Text(
                             _selectedDateRange == null
                                 ? 'من تاريخ'
-                                : DateFormat('yyyy/MM/dd').format(_selectedDateRange!.start),
+                                : DateFormat(
+                                    'yyyy/MM/dd',
+                                  ).format(_selectedDateRange!.start),
                             style: TextStyle(
-                              color: _selectedDateRange == null ? Colors.grey : Colors.black,
+                              color: _selectedDateRange == null
+                                  ? Colors.grey
+                                  : Colors.black,
                             ),
                           ),
                           const Icon(Icons.calendar_month, color: Colors.grey),
@@ -120,9 +122,13 @@ class _RentScreenState extends State<RentScreen> {
                           Text(
                             _selectedDateRange == null
                                 ? 'إلى تاريخ'
-                                : DateFormat('yyyy/MM/dd').format(_selectedDateRange!.end),
+                                : DateFormat(
+                                    'yyyy/MM/dd',
+                                  ).format(_selectedDateRange!.end),
                             style: TextStyle(
-                              color: _selectedDateRange == null ? Colors.grey : Colors.black,
+                              color: _selectedDateRange == null
+                                  ? Colors.grey
+                                  : Colors.black,
                             ),
                           ),
                           const Icon(Icons.calendar_month, color: Colors.grey),
@@ -147,7 +153,10 @@ class _RentScreenState extends State<RentScreen> {
                   const SizedBox(width: 8),
                   Text(
                     ' ر.س',
-                    style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -162,26 +171,55 @@ class _RentScreenState extends State<RentScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('السيارات المتاحة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const Text(
+          'السيارات المتاحة',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
         const SizedBox(height: 8),
         BlocBuilder<RentCarBloc, RentCarState>(
           bloc: getIt<RentCarBloc>(),
           builder: (context, state) {
             return state.rentCarStatus == RequestStatus.loading
-                ? Expanded(child: Center(child: CircularProgressIndicator.adaptive()))
+                ? Expanded(
+                    child: Center(child: CircularProgressIndicator.adaptive()),
+                  )
                 : state.rentCarStatus == RequestStatus.success
                 ? state.cars.isEmpty
-                      ? Expanded(child: Center(child: Text('لا يوجد سيارات متاحة للآجار حالياً')))
+                      ? Expanded(
+                          child: Center(
+                            child: Text('لا يوجد سيارات متاحة للآجار حالياً'),
+                          ),
+                        )
                       : RefreshIndicator.adaptive(
                           onRefresh: () => Future(() {
                             getIt<RentCarBloc>().add(GetRentCarEvent());
                           }),
                           child: ListView.separated(
-                            physics: const NeverScrollableScrollPhysics(),
+                            physics: const AlwaysScrollableScrollPhysics(),
                             shrinkWrap: true,
-                            itemCount: state.cars.length,
-                            separatorBuilder: (context, index) => const SizedBox(height: 12),
-                            itemBuilder: (context, index) => _buildCarItem(state.cars[index]),
+                            itemCount:
+                                (_selectedCarType == null
+                                        ? state.cars
+                                        : state.cars
+                                              .where(
+                                                (c) =>
+                                                    c.carType ==
+                                                    _selectedCarType,
+                                              )
+                                              .toList())
+                                    .length,
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              final filtered = _selectedCarType == null
+                                  ? state.cars
+                                  : state.cars
+                                        .where(
+                                          (c) => c.carType == _selectedCarType,
+                                        )
+                                        .toList();
+                              return _buildCarItem(filtered[index]);
+                            },
                           ),
                         )
                 : Expanded(
@@ -202,24 +240,27 @@ class _RentScreenState extends State<RentScreen> {
 
   Widget _buildCarItem(CarListing car) {
     return Card(
-      elevation: 2,
+      elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                car.imageUrls.isEmpty ? '' : car.imageUrls.first,
-                width: 100,
-                height: 80,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  width: 100,
-                  height: 80,
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.car_rental, size: 40),
+              borderRadius: BorderRadius.circular(10),
+              child: AspectRatio(
+                aspectRatio: 4 / 3,
+                child: Image.network(
+                  car.imageUrls.isEmpty ? '' : car.imageUrls.first,
+                  width: 120,
+                  height: 90,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: Colors.grey[200],
+                    child: const Center(
+                      child: Icon(Icons.car_rental, size: 40),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -228,28 +269,82 @@ class _RentScreenState extends State<RentScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    car.carModel,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          car.carModel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          car.carType,
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(car.carType, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on_outlined,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        car.city,
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
                   Row(
                     children: [
                       const Icon(Icons.people, size: 16, color: Colors.grey),
                       const SizedBox(width: 4),
-                      Text('$_selectedSeats مقاعد', style: const TextStyle(fontSize: 12)),
+                      Text(
+                        '$_selectedSeats مقاعد',
+                        style: const TextStyle(fontSize: 12),
+                      ),
                       const SizedBox(width: 12),
-                      const Icon(Icons.local_gas_station, size: 16, color: Colors.grey),
+                      const Icon(
+                        Icons.local_gas_station,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
                       const SizedBox(width: 4),
-                      Text(_selectedFuelType, style: const TextStyle(fontSize: 12)),
+                      Text(
+                        _selectedFuelType,
+                        style: const TextStyle(fontSize: 12),
+                      ),
                     ],
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: 8),
             Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
                   '${car.price} دولار/يوم',
@@ -260,14 +355,15 @@ class _RentScreenState extends State<RentScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                ElevatedButton(
+                ElevatedButton.icon(
                   onPressed: () => _showBookingDialog(car),
+                  icon: const Icon(Icons.event_available, size: 18),
+                  label: const Text('حجز'),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     backgroundColor: Colors.green[50],
                     foregroundColor: Colors.green,
                   ),
-                  child: const Text('حجز'),
                 ),
               ],
             ),
@@ -306,6 +402,65 @@ class _RentScreenState extends State<RentScreen> {
     }
   }
 
+  Widget _buildSelectedRangeSummary() {
+    if (_selectedDateRange == null) {
+      return const SizedBox.shrink();
+    }
+    final days = _selectedDateRange!.duration.inDays;
+    final total = NumberFormat('#,###').format(days * _dailyPrice);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.blue.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.blue.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.info_outline, color: Colors.blue),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'المدة: $days يوم - تقدير التكلفة: $total دولار',
+                style: const TextStyle(fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickFilters() {
+    return SizedBox(
+      height: 36,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (context, index) {
+          final all = index == 0;
+          final label = all ? 'الكل' : carTypes[index - 1];
+          final selected = all
+              ? _selectedCarType == null
+              : _selectedCarType == label;
+          return ChoiceChip(
+            label: Text(label),
+            selected: selected,
+            onSelected: (_) {
+              setState(() {
+                _selectedCarType = all ? null : label;
+              });
+            },
+          );
+        },
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemCount: 1 + carTypes.length,
+      ),
+    );
+  }
+
   void _showBookingDialog(CarListing car) {
     showDialog(
       context: context,
@@ -318,18 +473,24 @@ class _RentScreenState extends State<RentScreen> {
             if (_selectedDateRange != null) ...[
               Text('المدة: ${_selectedDateRange!.duration.inDays} أيام'),
               const SizedBox(height: 8),
-              Text('السعر اليومي: ${car.price} ر.س'),
+              Text('السعر اليومي: ${car.price} دولار'),
               const SizedBox(height: 8),
               Text(
-                'الإجمالي: ${car.price * _selectedDateRange!.duration.inDays} ر.س',
+                'الإجمالي: ${car.price * _selectedDateRange!.duration.inDays} دولار',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ] else
-              const Text('الرجاء تحديد مدة الاستئجار أولاً', style: TextStyle(color: Colors.red)),
+              const Text(
+                'الرجاء تحديد مدة الاستئجار أولاً',
+                style: TextStyle(color: Colors.red),
+              ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
           ElevatedButton(
             onPressed: _selectedDateRange == null
                 ? null
@@ -364,7 +525,10 @@ class _RentScreenState extends State<RentScreen> {
             _buildPaymentOption(Icons.money, 'الدفع عند الاستلام'),
             IgnorePointer(
               ignoring: true,
-              child: _buildPaymentOption(Icons.phone_android, 'محفظة إلكترونية'),
+              child: _buildPaymentOption(
+                Icons.phone_android,
+                'محفظة إلكترونية',
+              ),
             ),
             const SizedBox(height: 20),
             BlocListener<RentCarBloc, RentCarState>(
@@ -391,7 +555,8 @@ class _RentScreenState extends State<RentScreen> {
                         params: RentCarParams(
                           id: car.id,
                           status: 'rent_pending',
-                          period: _selectedDateRange!.duration.inDays.toString(),
+                          period: _selectedDateRange!.duration.inDays
+                              .toString(),
                         ),
                       ),
                     );

@@ -37,7 +37,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
-            BoxShadow(color: Colors.grey.withOpacity(0.2), spreadRadius: 1, blurRadius: 5),
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 1,
+              blurRadius: 5,
+            ),
           ],
         ),
         child: BottomNavigationBar(
@@ -101,7 +105,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
       appBar: AppBar(
         title: const Text('Car Market'),
-        actions: [IconButton(icon: const Icon(Icons.notifications_none), onPressed: () {})],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_none),
+            onPressed: () {},
+          ),
+        ],
       ),
       body: const HomeScreenBody(),
     );
@@ -118,31 +127,41 @@ class HomeScreenBody extends StatefulWidget {
 class _HomeScreenBodyState extends State<HomeScreenBody> {
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SearchBar(),
-            SizedBox(height: 20),
-            SectionTitle(
-              title: 'السيارات المميزة',
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => FavoritesScreen()));
-              },
-            ),
-            SizedBox(height: 10),
-            FeaturedCarsSection(),
-            SizedBox(height: 20),
-            SectionTitle(title: 'فئات السيارات'),
-            SizedBox(height: 10),
-            CategoriesSection(),
-            SizedBox(height: 20),
-            SectionTitle(title: 'إعلانات حديثة'),
-            SizedBox(height: 10),
-            RecentListingsSection(),
-          ],
+    return RefreshIndicator.adaptive(
+      onRefresh: () {
+        getIt<HomeBloc>().add(GetCarsEvent());
+        return Future.delayed(const Duration(milliseconds: 400));
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SearchBar(),
+              SizedBox(height: 20),
+              SectionTitle(
+                title: 'السيارات المميزة',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => FavoritesScreen()),
+                  );
+                },
+              ),
+              SizedBox(height: 10),
+              FeaturedCarsSection(),
+              SizedBox(height: 20),
+              SectionTitle(title: 'فئات السيارات'),
+              SizedBox(height: 10),
+              CategoriesSection(),
+              SizedBox(height: 20),
+              SectionTitle(title: 'إعلانات حديثة'),
+              SizedBox(height: 10),
+              RecentListingsSection(),
+            ],
+          ),
         ),
       ),
     );
@@ -155,7 +174,10 @@ class SearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: const TextField(
         decoration: InputDecoration(
           hintText: 'ابحث عن سيارة...',
@@ -178,8 +200,14 @@ class SectionTitle extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        TextButton(onPressed: onTap, child: onTap == null ? Text('') : const Text('عرض الكل')),
+        Text(
+          title,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        TextButton(
+          onPressed: onTap,
+          child: onTap == null ? Text('') : const Text('عرض الكل'),
+        ),
       ],
     );
   }
@@ -202,7 +230,8 @@ class FeaturedCarsSection extends StatelessWidget {
                   itemCount: state.cars.length > 3 ? 3 : state.cars.length,
                   scrollDirection: Axis.horizontal,
 
-                  itemBuilder: (context, index) => CarCard(car: state.cars[index]),
+                  itemBuilder: (context, index) =>
+                      CarCard(car: state.cars[index]),
                 ),
               );
       },
@@ -236,7 +265,9 @@ class CarCard extends StatelessWidget {
           Stack(
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
                 child: Image.network(
                   car.imageUrls.firstOrNull ?? '',
                   height: 120,
@@ -259,7 +290,9 @@ class CarCard extends StatelessWidget {
                     right: 8,
                     child: IconButton(
                       onPressed: () {
-                        getIt<FavoriteBloc>().add(ToggleFavoriteEvent(carListing: car));
+                        getIt<FavoriteBloc>().add(
+                          ToggleFavoriteEvent(carListing: car),
+                        );
                       },
                       icon: Icon(
                         isFavorite ? Icons.favorite : Icons.favorite_border,
@@ -276,18 +309,27 @@ class CarCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(car.carModel, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  car.carModel,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   car.price.toStringAsFixed(0),
-                  style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 const Row(
                   children: [
                     Icon(Icons.location_on, size: 14, color: Colors.grey),
                     SizedBox(width: 4),
-                    Text('حلب', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text(
+                      'حلب',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
                   ],
                 ),
               ],
@@ -361,21 +403,29 @@ class RecentListingsSection extends StatelessWidget {
             ? const Center(child: CircularProgressIndicator())
             : state.cars.isEmpty
             ? const Center(child: Text('لا توجد إعلانات حديثة'))
-            : ListView.separated(
-                separatorBuilder: (context, index) => const SizedBox(height: 10),
-                itemCount: state.cars.length,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemBuilder: (context, index) {
-                  final car = state.cars[index];
-                  return ListingItem(
-                    image: car.imageUrls.firstOrNull ?? '',
-                    title: car.carModel,
-                    price: '${car.price.toStringAsFixed(0)} ل.س',
-                    location: car.city,
-                    date: '${car.createdAt.day}/${car.createdAt.month}/${car.createdAt.year}',
-                  );
+            : RefreshIndicator.adaptive(
+                onRefresh: () async {
+                  getIt<HomeBloc>().add(GetCarsEvent());
+                  await Future.delayed(const Duration(milliseconds: 400));
                 },
+                child: ListView.separated(
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 10),
+                  itemCount: state.cars.length,
+                  shrinkWrap: true,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  itemBuilder: (context, index) {
+                    final car = state.cars[index];
+                    return ListingItem(
+                      image: car.imageUrls.firstOrNull ?? '',
+                      title: car.carModel,
+                      price: '${car.price.toStringAsFixed(0)} ل.س',
+                      location: car.city,
+                      date:
+                          '${car.createdAt.day}/${car.createdAt.month}/${car.createdAt.year}',
+                    );
+                  },
+                ),
               );
       },
     );
@@ -436,20 +486,32 @@ class ListingItem extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   price,
-                  style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
                     const Icon(Icons.location_on, size: 14, color: Colors.grey),
                     const SizedBox(width: 4),
-                    Text(location, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text(
+                      location,
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
                     const Spacer(),
-                    Text(date, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text(
+                      date,
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
                   ],
                 ),
               ],

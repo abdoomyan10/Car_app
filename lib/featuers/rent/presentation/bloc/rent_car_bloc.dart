@@ -15,7 +15,8 @@ part 'rent_car_state.dart';
 class RentCarBloc extends Bloc<RentCarEvent, RentCarState> {
   final GetRentCarsUsecase getRentCarsUsecase;
   final RentCarUsecase rentCarUsecase;
-  RentCarBloc(this.getRentCarsUsecase, this.rentCarUsecase) : super(RentCarState()) {
+  RentCarBloc(this.getRentCarsUsecase, this.rentCarUsecase)
+    : super(RentCarState()) {
     on<RentNewCarEvent>((event, emit) async {
       emit(state.copyWith(rentNewCarStatus: RequestStatus.loading));
       final result = await rentCarUsecase.call(event.params);
@@ -37,7 +38,9 @@ class RentCarBloc extends Bloc<RentCarEvent, RentCarState> {
           emit(state.copyWith(rentCarStatus: RequestStatus.failed));
         },
         (right) {
-          emit(state.copyWith(rentCarStatus: RequestStatus.success, cars: right));
+          emit(
+            state.copyWith(rentCarStatus: RequestStatus.success, cars: right),
+          );
         },
       );
     });

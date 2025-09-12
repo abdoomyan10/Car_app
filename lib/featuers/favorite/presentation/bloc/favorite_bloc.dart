@@ -11,10 +11,15 @@ class FavoriteBloc extends HydratedBloc<FavoriteEvent, FavoriteState> {
   FavoriteBloc() : super(FavoriteState()) {
     on<ToggleFavoriteEvent>((event, emit) {
       if (state.cars.contains(event.carListing)) {
-        emit(state.copyWith(cars: List.of(state.cars)..remove(event.carListing)));
+        emit(
+          state.copyWith(cars: List.of(state.cars)..remove(event.carListing)),
+        );
       } else {
         emit(state.copyWith(cars: List.of(state.cars)..add(event.carListing)));
       }
+    });
+    on<ClearFavoriteEvent>((event, emit) {
+      emit(state.copyWith(cars: []));
     });
   }
 

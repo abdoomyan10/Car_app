@@ -34,13 +34,19 @@ class FavoritesScreen extends StatelessWidget {
               );
             }
 
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: favorites.length,
-              itemBuilder: (context, index) {
-                final favorite = favorites[index];
-                return FavoriteCarItem(favorite: favorite);
+            return RefreshIndicator.adaptive(
+              onRefresh: () async {
+                // No remote source; keep consistent UX
+                return Future.delayed(const Duration(milliseconds: 300));
               },
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: favorites.length,
+                itemBuilder: (context, index) {
+                  final favorite = favorites[index];
+                  return FavoriteCarItem(favorite: favorite);
+                },
+              ),
             );
           }
         },
@@ -77,7 +83,8 @@ class FavoriteCarItem extends StatelessWidget {
                       child: Image.network(
                         favorite.imageUrls.first,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
+                        errorBuilder: (context, error, stackTrace) =>
+                            _buildPlaceholder(),
                       ),
                     )
                   : _buildPlaceholder(),
@@ -90,7 +97,10 @@ class FavoriteCarItem extends StatelessWidget {
                 children: [
                   Text(
                     favorite.carModel,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -100,9 +110,19 @@ class FavoriteCarItem extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.location_on, size: 14, color: Colors.grey),
+                      const Icon(
+                        Icons.location_on,
+                        size: 14,
+                        color: Colors.grey,
+                      ),
                       const SizedBox(width: 4),
-                      Text(favorite.city, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      Text(
+                        favorite.city,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -112,7 +132,9 @@ class FavoriteCarItem extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.red),
               onPressed: () {
-                getIt<FavoriteBloc>().add(ToggleFavoriteEvent(carListing: favorite));
+                getIt<FavoriteBloc>().add(
+                  ToggleFavoriteEvent(carListing: favorite),
+                );
               },
             ),
           ],
@@ -122,6 +144,8 @@ class FavoriteCarItem extends StatelessWidget {
   }
 
   Widget _buildPlaceholder() {
-    return const Center(child: Icon(Icons.car_repair, size: 32, color: Colors.grey));
+    return const Center(
+      child: Icon(Icons.car_repair, size: 32, color: Colors.grey),
+    );
   }
 }

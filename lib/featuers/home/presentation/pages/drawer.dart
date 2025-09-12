@@ -2,6 +2,7 @@ import 'package:car_appp/core/services/dependencies.dart';
 import 'package:car_appp/featuers/auth/presentation/bloc/auth_bloc.dart';
 import 'package:car_appp/featuers/auth/presentation/bloc/auth_event.dart';
 import 'package:car_appp/featuers/auth/presentation/pages/splashscreen.dart';
+import 'package:car_appp/featuers/favorite/presentation/bloc/favorite_bloc.dart';
 import 'package:flutter/material.dart';
 
 import '../../../favorite/presentation/pages/favorite_screen.dart';
@@ -70,6 +71,7 @@ class AppDrawer extends StatelessWidget {
                 label: Text('تسجيل الخروج'),
                 onPressed: () {
                   getIt<AuthBloc>().add(LogoutEvent());
+                  getIt<FavoriteBloc>().add(ClearFavoriteEvent());
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (_) => const SplashScreen()),
                     (route) => false,
