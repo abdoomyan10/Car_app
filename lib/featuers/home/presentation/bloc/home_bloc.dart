@@ -23,7 +23,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         },
         (right) {
           print(right);
-          emit(state.copyWith(cars: right, carBuyStatus: RequestStatus.success));
+          emit(
+            state.copyWith(cars: right, carBuyStatus: RequestStatus.success),
+          );
         },
       );
     });
